@@ -33,4 +33,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       # Remotion downloads its own headless shell on first render.
+      # Goldens are regenerated on the runner, then re-rendered and diffed:
+      # this proves every block × theme × aspect renders without error AND that
+      # rendering is bit-deterministic. (Pixel-exact goldens can't be shared
+      # across OSes — the committed PNGs are the macOS local visual reference.)
+      - run: pnpm goldens
       - run: pnpm goldens:check

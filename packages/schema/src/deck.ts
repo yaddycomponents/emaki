@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { Aspect } from './aspect'
-import { titleBlock, statementBlock, statBlock } from './blocks'
+import { titleBlock, statementBlock, statBlock, compareBarsBlock } from './blocks'
 import { createRegistry, type BlockDef } from './registry'
 
 export const DECK_VERSION = 1
@@ -30,9 +30,10 @@ function sceneEnvelope<T extends string, P extends z.ZodType>(type: T, props: P)
 const TitleScene = sceneEnvelope('title', titleBlock.props)
 const StatementScene = sceneEnvelope('statement', statementBlock.props)
 const StatScene = sceneEnvelope('stat', statBlock.props)
+const CompareScene = sceneEnvelope('compare-bars', compareBarsBlock.props)
 
 export const SceneSchema = z
-  .discriminatedUnion('type', [TitleScene, StatementScene, StatScene])
+  .discriminatedUnion('type', [TitleScene, StatementScene, StatScene, CompareScene])
   .meta({ id: 'Scene' })
 
 function deckSchema<S extends z.ZodType>(scene: S) {

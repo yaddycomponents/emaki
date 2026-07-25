@@ -47,5 +47,31 @@ export const statBlock = defineBlock({
   text: (p) => [p.value, p.label, p.caption].filter(Boolean).join(' '),
 })
 
-/** The registered set the canonical `DeckSchema` validates against in Week 1. */
-export const BOOTSTRAP_BLOCKS = [titleBlock, statementBlock, statBlock] as const
+export const compareBarsBlock = defineBlock({
+  type: 'compare-bars',
+  props: z
+    .object({
+      title: z.string().optional().meta({ description: 'Label above the comparison.' }),
+      unit: z.string().optional().meta({ description: 'Unit suffix on each value, e.g. "kB".' }),
+      rows: z
+        .array(
+          z.object({
+            label: z.string().min(1),
+            before: z.number().meta({ description: 'The before-state value.' }),
+            after: z.number().meta({ description: 'The after-state value.' }),
+          }),
+        )
+        .min(1)
+        .meta({ description: 'One or more before/after rows on a shared axis.' }),
+    })
+    .meta({ id: 'CompareBarsProps' }),
+  text: (p) => [p.title, ...p.rows.map((r) => r.label)].filter(Boolean).join(' '),
+})
+
+/** The registered block set the canonical `DeckSchema` validates against. */
+export const BOOTSTRAP_BLOCKS = [titleBlock, statementBlock, statBlock, compareBarsBlock] as const
+
+export type TitleProps = z.infer<typeof titleBlock.props>
+export type StatementProps = z.infer<typeof statementBlock.props>
+export type StatProps = z.infer<typeof statBlock.props>
+export type CompareBarsProps = z.infer<typeof compareBarsBlock.props>

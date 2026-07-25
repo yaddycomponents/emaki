@@ -1,0 +1,39 @@
+{
+  "name": "@emaki/blocks",
+  "version": "0.1.0",
+  "description": "The Emaki block set — title, statement, stat, compare-bars — each with per-aspect layouts and a declared timeline.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external react",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "dependencies": {
+    "@emaki/core": "workspace:*",
+    "@emaki/schema": "workspace:*",
+    "framer-motion": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

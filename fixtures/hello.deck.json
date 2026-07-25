@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "title": "Hello, Emaki",
+  "aspect": "9:16",
+  "theme": "warm-editorial",
+  "scenes": [
+    {
+      "id": "open",
+      "type": "title",
+      "props": { "kicker": "Emaki", "text": "Films from a JSON file." }
+    },
+    {
+      "id": "why",
+      "type": "statement",
+      "props": { "text": "One deck. One engine. Two render paths that match." }
+    },
+    {
+      "id": "proof",
+      "type": "stat",
+      "props": {
+        "value": "30s",
+        "label": "vertical film",
+        "caption": "rendered locally — your key never leaves your machine"
+      }
+    }
+  ]
+}

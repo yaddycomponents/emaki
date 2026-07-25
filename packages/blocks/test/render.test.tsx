@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { parseDeck, type Aspect } from '@emaki/schema'
-import { Block, BLOCKS, ALL_BLOCK_TYPES, blockAnimationEnd } from '../src'
+import { warmEditorial, saasProduct } from '@emaki/themes'
+import { Block, BLOCKS, ALL_BLOCK_TYPES, blockAnimationEnd, ThemeProvider } from '../src'
 
 const parsed = parseDeck({
   version: 1,
@@ -45,5 +46,18 @@ describe('block rendering', () => {
 
   it('gives every block a positive animation-end time', () => {
     for (const type of ALL_BLOCK_TYPES) expect(blockAnimationEnd(type)).toBeGreaterThan(0)
+  })
+
+  it('renders the same block differently under two themes (one engine)', () => {
+    const scene = deck.scenes[0]! // title
+    const warm = renderToStaticMarkup(
+      createElement(ThemeProvider, { theme: warmEditorial, children: createElement(Block, { scene, aspect: '16:9' }) }),
+    )
+    const saas = renderToStaticMarkup(
+      createElement(ThemeProvider, { theme: saasProduct, children: createElement(Block, { scene, aspect: '16:9' }) }),
+    )
+    expect(warm).toContain(warmEditorial.colors.bg) // #f4e7d6
+    expect(saas).toContain(saasProduct.colors.bg) // #f3f4f7
+    expect(warm).not.toEqual(saas)
   })
 })

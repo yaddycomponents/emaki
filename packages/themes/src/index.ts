@@ -1,0 +1,4 @@
+export type { Theme } from './theme'
+export { warmEditorial } from './warm-editorial'
+export { saasProduct } from './saas-product'
+export { THEMES, DEFAULT_THEME_ID, resolveTheme, assertThemeValid } from './registry'

@@ -25,6 +25,7 @@
   "dependencies": {
     "@emaki/core": "workspace:*",
     "@emaki/schema": "workspace:*",
+    "@emaki/themes": "workspace:*",
     "framer-motion": "^12.0.0"
   },
   "devDependencies": {

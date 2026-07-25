@@ -23,6 +23,7 @@
     "@emaki/blocks": "workspace:*",
     "@emaki/core": "workspace:*",
     "@emaki/schema": "workspace:*",
+    "@emaki/themes": "workspace:*",
     "@remotion/bundler": "^4.0.0",
     "@remotion/renderer": "^4.0.0",
     "remotion": "^4.0.0"

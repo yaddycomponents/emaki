@@ -12,3 +12,5 @@ export {
 export { Title16x9, Title9x16, titleTimeline } from "./blocks/title";
 export * from "./engine";
 export * from "./registry";
+export { makeStyles, type Styles } from "./styles";
+export * from "./theme";

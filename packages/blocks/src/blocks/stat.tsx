@@ -2,7 +2,7 @@ import type { Timeline } from "@emaki/core";
 import type { StatProps } from "@emaki/schema";
 import type { FC } from "react";
 import { useAnim } from "../engine";
-import { eyebrow, frame, rowLabel, statValue } from "../styles";
+import { useStyles } from "../theme";
 
 export const statTimeline: Timeline = [
   { target: "value", preset: "popIn", at: 0 },
@@ -17,19 +17,23 @@ const Content: FC<StatProps & { valueSize?: string }> = ({
   valueSize,
 }) => {
   const A = useAnim();
+  const s = useStyles();
   return (
     <>
       <A
         target="value"
         as="div"
-        style={{ ...statValue, ...(valueSize ? { fontSize: valueSize } : {}) }}
+        style={{
+          ...s.statValue,
+          ...(valueSize ? { fontSize: valueSize } : {}),
+        }}
       >
         {value}
       </A>
       <A
         target="label"
         as="div"
-        style={{ ...eyebrow, marginTop: "0.4em", marginBottom: 0 }}
+        style={{ ...s.eyebrow, marginTop: "0.4em", marginBottom: 0 }}
       >
         {label}
       </A>
@@ -37,7 +41,7 @@ const Content: FC<StatProps & { valueSize?: string }> = ({
         <A
           target="caption"
           as="div"
-          style={{ ...rowLabel, marginTop: "0.8em", maxWidth: "20em" }}
+          style={{ ...s.rowLabel, marginTop: "0.8em", maxWidth: "20em" }}
         >
           {caption}
         </A>
@@ -46,14 +50,20 @@ const Content: FC<StatProps & { valueSize?: string }> = ({
   );
 };
 
-export const Stat16x9: FC<StatProps> = (p) => (
-  <div style={frame()}>
-    <Content {...p} />
-  </div>
-);
+export const Stat16x9: FC<StatProps> = (p) => {
+  const s = useStyles();
+  return (
+    <div style={s.frame()}>
+      <Content {...p} />
+    </div>
+  );
+};
 
-export const Stat9x16: FC<StatProps> = (p) => (
-  <div style={frame({ padding: "14% 8%" })}>
-    <Content {...p} valueSize="clamp(64px, 20vw, 180px)" />
-  </div>
-);
+export const Stat9x16: FC<StatProps> = (p) => {
+  const s = useStyles();
+  return (
+    <div style={s.frame({ padding: "14% 8%" })}>
+      <Content {...p} valueSize="clamp(64px, 20vw, 180px)" />
+    </div>
+  );
+};

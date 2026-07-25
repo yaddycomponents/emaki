@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type { TitleProps } from '@emaki/schema'
 import type { Timeline } from '@emaki/core'
 import { useAnim } from '../engine'
-import { frame, eyebrow, display, mask } from '../styles'
+import { useStyles } from '../theme'
 
 export const titleTimeline: Timeline = [
   { target: 'kicker', preset: 'fadeUp', at: 0 },
@@ -11,15 +11,16 @@ export const titleTimeline: Timeline = [
 
 export const Title16x9: FC<TitleProps> = ({ text, kicker }) => {
   const A = useAnim()
+  const s = useStyles()
   return (
-    <div style={frame()}>
+    <div style={s.frame()}>
       {kicker ? (
-        <A target="kicker" as="div" style={eyebrow}>
+        <A target="kicker" as="div" style={s.eyebrow}>
           {kicker}
         </A>
       ) : null}
-      <div style={mask}>
-        <A target="title" as="h1" style={display}>
+      <div style={s.mask}>
+        <A target="title" as="h1" style={s.display}>
           {text}
         </A>
       </div>
@@ -29,15 +30,16 @@ export const Title16x9: FC<TitleProps> = ({ text, kicker }) => {
 
 export const Title9x16: FC<TitleProps> = ({ text, kicker }) => {
   const A = useAnim()
+  const s = useStyles()
   return (
-    <div style={frame({ padding: '12% 8%' })}>
+    <div style={s.frame({ padding: '12% 8%' })}>
       {kicker ? (
-        <A target="kicker" as="div" style={eyebrow}>
+        <A target="kicker" as="div" style={s.eyebrow}>
           {kicker}
         </A>
       ) : null}
-      <div style={mask}>
-        <A target="title" as="h1" style={{ ...display, fontSize: 'clamp(48px, 12vw, 128px)' }}>
+      <div style={s.mask}>
+        <A target="title" as="h1" style={{ ...s.display, fontSize: 'clamp(48px, 12vw, 128px)' }}>
           {text}
         </A>
       </div>

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "title": "Auto-reply",
+  "aspect": "9:16",
+  "theme": "saas-product",
+  "scenes": [
+    {
+      "id": "open",
+      "type": "title",
+      "props": { "kicker": "Auto-reply", "text": "Your inbox, on autopilot." }
+    },
+    {
+      "id": "speed",
+      "type": "compare-bars",
+      "props": {
+        "title": "Median response time",
+        "unit": "m",
+        "rows": [
+          { "label": "manual", "before": 42, "after": 3 },
+          { "label": "triage", "before": 18, "after": 2 }
+        ]
+      }
+    },
+    {
+      "id": "proof",
+      "type": "stat",
+      "props": {
+        "value": "92%",
+        "label": "replies drafted",
+        "caption": "before a human ever opens the thread"
+      }
+    }
+  ]
+}

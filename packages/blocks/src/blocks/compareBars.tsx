@@ -2,7 +2,7 @@ import type { Timeline } from "@emaki/core";
 import type { CompareBarsProps } from "@emaki/schema";
 import type { CSSProperties, FC } from "react";
 import { useAnim } from "../engine";
-import { eyebrow, frame, rowLabel, tokens } from "../styles";
+import { useStyles, useTheme } from "../theme";
 
 // One timeline, all layouts. Bars stay horizontal in every aspect so the same
 // `growX` steps drive both the 16:9 table and the 9:16 stack.
@@ -20,7 +20,7 @@ function maxValue(rows: CompareBarsProps["rows"]): number {
 const track: CSSProperties = {
   position: "relative",
   height: "0.7em",
-  background: "rgba(94,59,70,0.08)",
+  background: "rgba(0,0,0,0.06)",
   borderRadius: 4,
 };
 
@@ -33,11 +33,6 @@ function bar(color: string): CSSProperties {
     transformOrigin: "left center",
   };
 }
-
-const num: CSSProperties = {
-  fontFamily: tokens.fonts.mono,
-  fontSize: tokens.type.metric,
-};
 
 function Bar({
   target,
@@ -55,6 +50,7 @@ function Bar({
   numColor: string;
 }) {
   const A = useAnim();
+  const t = useTheme();
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "0.8em" }}>
       <div style={{ ...track, flex: 1, width: `${(value / max) * 100}%` }}>
@@ -62,7 +58,14 @@ function Bar({
           {""}
         </A>
       </div>
-      <div style={{ ...num, color: numColor, minWidth: "3em" }}>
+      <div
+        style={{
+          fontFamily: t.fonts.mono,
+          fontSize: t.type.metric,
+          color: numColor,
+          minWidth: "3em",
+        }}
+      >
         {value}
         {unit ?? ""}
       </div>
@@ -70,17 +73,40 @@ function Bar({
   );
 }
 
-export const CompareBars16x9: FC<CompareBarsProps> = ({
+const Rows: FC<CompareBarsProps & { stacked?: boolean }> = ({
   title,
   unit,
   rows,
+  stacked,
 }) => {
   const A = useAnim();
+  const s = useStyles();
+  const t = useTheme();
   const max = maxValue(rows);
+  const pair = (r: CompareBarsProps["rows"][number], i: number) => (
+    <>
+      <Bar
+        target="bar-before"
+        value={r.before}
+        max={max}
+        unit={unit}
+        color={t.data.beforeBar}
+        numColor={t.data.beforeNum}
+      />
+      <Bar
+        target="bar-after"
+        value={r.after}
+        max={max}
+        unit={unit}
+        color={t.data.afterBar}
+        numColor={t.data.afterNum}
+      />
+    </>
+  );
   return (
-    <div style={frame()}>
+    <>
       {title ? (
-        <A target="title" as="div" style={eyebrow}>
+        <A target="title" as="div" style={s.eyebrow}>
           {title}
         </A>
       ) : null}
@@ -90,97 +116,61 @@ export const CompareBars16x9: FC<CompareBarsProps> = ({
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "1.6em",
+          gap: stacked ? "2em" : "1.6em",
           marginTop: "1em",
         }}
       >
-        {rows.map((r, i) => (
-          <div
-            key={i}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "10em 1fr",
-              alignItems: "center",
-              gap: "1em",
-            }}
-          >
-            <div style={rowLabel}>{r.label}</div>
+        {rows.map((r, i) =>
+          stacked ? (
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "0.5em" }}
+              key={i}
+              style={{ display: "flex", flexDirection: "column", gap: "0.7em" }}
             >
-              <Bar
-                target="bar-before"
-                value={r.before}
-                max={max}
-                unit={unit}
-                color={tokens.data.beforeBar}
-                numColor={tokens.data.beforeNum}
-              />
-              <Bar
-                target="bar-after"
-                value={r.after}
-                max={max}
-                unit={unit}
-                color={tokens.data.afterBar}
-                numColor={tokens.data.afterNum}
-              />
+              <div style={s.rowLabel}>{r.label}</div>
+              {pair(r, i)}
             </div>
-          </div>
-        ))}
+          ) : (
+            <div
+              key={i}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "10em 1fr",
+                alignItems: "center",
+                gap: "1em",
+              }}
+            >
+              <div style={s.rowLabel}>{r.label}</div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5em",
+                }}
+              >
+                {pair(r, i)}
+              </div>
+            </div>
+          ),
+        )}
       </A>
+    </>
+  );
+};
+
+export const CompareBars16x9: FC<CompareBarsProps> = (p) => {
+  const s = useStyles();
+  return (
+    <div style={s.frame()}>
+      <Rows {...p} />
     </div>
   );
 };
 
-export const CompareBars9x16: FC<CompareBarsProps> = ({
-  title,
-  unit,
-  rows,
-}) => {
-  const A = useAnim();
-  const max = maxValue(rows);
+export const CompareBars9x16: FC<CompareBarsProps> = (p) => {
+  const s = useStyles();
   return (
-    <div style={frame({ padding: "12% 8%" })}>
-      {title ? (
-        <A target="title" as="div" style={eyebrow}>
-          {title}
-        </A>
-      ) : null}
-      <A
-        target="rows"
-        as="div"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "2em",
-          marginTop: "1em",
-        }}
-      >
-        {rows.map((r, i) => (
-          <div
-            key={i}
-            style={{ display: "flex", flexDirection: "column", gap: "0.7em" }}
-          >
-            <div style={rowLabel}>{r.label}</div>
-            <Bar
-              target="bar-before"
-              value={r.before}
-              max={max}
-              unit={unit}
-              color={tokens.data.beforeBar}
-              numColor={tokens.data.beforeNum}
-            />
-            <Bar
-              target="bar-after"
-              value={r.after}
-              max={max}
-              unit={unit}
-              color={tokens.data.afterBar}
-              numColor={tokens.data.afterNum}
-            />
-          </div>
-        ))}
-      </A>
+    <div style={s.frame({ padding: "12% 8%" })}>
+      <Rows {...p} stacked />
     </div>
   );
 };

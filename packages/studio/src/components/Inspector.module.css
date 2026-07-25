@@ -1,0 +1,50 @@
+.panel {
+  height: 100%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.file {
+  color: var(--blue);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  border: none;
+  outline: none;
+  background: var(--sunken);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  padding: var(--space-4);
+  tab-size: 2;
+}
+
+.error {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(217, 107, 74, 0.12);
+  border-top: var(--hairline) solid var(--danger);
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+}

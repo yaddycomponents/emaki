@@ -17,6 +17,10 @@ export function makeStyles(t: Theme): Styles {
     frame: (extra = {}) => ({
       position: "absolute",
       inset: 0,
+      // The scene is a size query container, so the type scale's `cqw` units
+      // resolve to the scene box — correct in a full-size Remotion render AND in
+      // a scaled-down studio preview.
+      containerType: "size",
       display: "flex",
       flexDirection: "column",
       justifyContent: "center",

@@ -1,0 +1,29 @@
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--bg);
+}
+
+.body {
+  min-height: 0;
+}
+
+.handle {
+  width: var(--hairline);
+  background: var(--line);
+  position: relative;
+  outline: none;
+  transition: background 0.15s var(--ease);
+}
+
+.handle::after {
+  content: "";
+  position: absolute;
+  inset: 0 calc(-1 * var(--space-1));
+}
+
+.handle:hover,
+.handle[data-resize-handle-state="drag"] {
+  background: var(--accent);
+}

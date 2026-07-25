@@ -1,0 +1,45 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-2);
+  border-top: var(--border);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-wide);
+  color: var(--faint);
+}
+
+.cmd {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--blue);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.copy {
+  border: var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: border-color 0.12s var(--ease), color 0.12s var(--ease);
+}
+
+.copy:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}

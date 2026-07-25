@@ -1,0 +1,34 @@
+.stage {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+}
+
+.empty {
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}

@@ -1,0 +1,79 @@
+/* Studio design tokens — the single source of truth for chrome.
+   Every color, length, radius, and border is a var. The ONE raw hairline width
+   lives here as --hairline; nothing else in the app hardcodes px lengths. */
+:root {
+  /* dark editorial chrome (from the Emaki Studio design) */
+  --bg: #1e1822;
+  --surface: #261f2c;
+  --surface-2: #2e2636;
+  --panel: #2c2b3a;
+  --sunken: #191320;
+  --line: #463b50;
+  --line-strong: #565471;
+
+  --text: #f3ece0;
+  --muted: #c9b89a;
+  --faint: #8a7d97;
+
+  --accent: #d9789f;
+  --accent-soft: rgba(217, 120, 159, 0.14);
+  --blue: #8fa8e8;
+  --amber: #e0a94a;
+  --danger: #d96b4a;
+
+  /* spacing scale — rem, no raw px */
+  --space-0: 0.125rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* radii */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-pill: 62.5rem;
+
+  /* the single hairline definition — referenced via --border everywhere */
+  --hairline: 1px;
+  --border: var(--hairline) solid var(--line);
+  --border-strong: var(--hairline) solid var(--line-strong);
+
+  /* type */
+  --font-ui: "Space Grotesk", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --track-wide: 0.14em;
+
+  --shadow: 0 var(--space-1) var(--space-5) rgba(0, 0, 0, 0.4);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-soft);
+}

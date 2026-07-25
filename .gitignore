@@ -5,6 +5,7 @@ coverage/
 *.log
 *.mp4
 frames/
+.goldens-tmp/
 .DS_Store
 .env
 .env.local

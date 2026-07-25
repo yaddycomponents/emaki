@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "title": "Showcase — warm-editorial",
+  "aspect": "16:9",
+  "theme": "warm-editorial",
+  "scenes": [
+    { "id": "title", "type": "title", "props": { "kicker": "Emaki", "text": "Films from a JSON file." } },
+    { "id": "statement", "type": "statement", "props": { "text": "One deck. One engine. Two matching paths.", "emphasis": ["matching"] } },
+    { "id": "chapter", "type": "chapter", "props": { "number": "01", "title": "The result" } },
+    { "id": "list", "type": "list", "props": { "title": "What shipped", "items": ["Schema", "Blocks", "Two render paths"] } },
+    { "id": "stat", "type": "stat", "props": { "value": "5,400", "label": "lines deleted", "caption": "across three repos" } },
+    { "id": "compare", "type": "compare-bars", "props": { "title": "Bundle", "unit": "kB", "rows": [{ "label": "raw", "before": 247, "after": 114 }] } },
+    { "id": "mock", "type": "ui-mock", "props": { "app": "emaki", "title": "the rendered still", "lines": ["Deck loaded.", "Rendering frame 45…"] } }
+  ]
+}

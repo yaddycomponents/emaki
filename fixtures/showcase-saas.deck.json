@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "title": "Showcase — saas-product",
+  "aspect": "9:16",
+  "theme": "saas-product",
+  "scenes": [
+    { "id": "title", "type": "title", "props": { "kicker": "Auto-reply", "text": "Your inbox, on autopilot." } },
+    { "id": "statement", "type": "statement", "props": { "text": "Every thread, triaged and drafted.", "emphasis": ["drafted"] } },
+    { "id": "chapter", "type": "chapter", "props": { "number": "01", "title": "How it works" } },
+    { "id": "list", "type": "list", "props": { "title": "Three steps", "items": ["Reads the thread", "Drafts a reply", "You hit send"] } },
+    { "id": "stat", "type": "stat", "props": { "value": "92%", "label": "replies drafted", "caption": "before a human opens the thread" } },
+    { "id": "compare", "type": "compare-bars", "props": { "title": "Response time", "unit": "m", "rows": [{ "label": "manual", "before": 42, "after": 3 }] } },
+    { "id": "mock", "type": "ui-mock", "props": { "app": "inbox · auto-reply", "title": "the drafted reply", "lines": ["Hi Sam —", "Friday works; deck by Thursday."] } }
+  ]
+}

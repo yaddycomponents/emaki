@@ -13,6 +13,7 @@ Usage
   emaki dur <deck.json> [--json]          print per-scene and total duration
   emaki schema [--out <file>]             print the deck JSON Schema (wire Monaco to it)
   emaki init [--out <file>] [--force]     scaffold a starter deck.json
+  emaki render <deck.json> [--aspect <16:9|1:1|9:16>] [--out <file.mp4>]
 
 Every command accepts --json for machine-readable output.
 `
@@ -134,6 +135,41 @@ function cmdInit(args: string[]): void {
   process.stdout.write(`✓ scaffolded ${out}\n  next: emaki validate ${out}\n`)
 }
 
+async function cmdRender(args: string[]): Promise<void> {
+  const { positionals, values } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: { aspect: { type: 'string' }, out: { type: 'string', default: 'film.mp4' } },
+  })
+  const file = positionals[0]
+  if (!file) fail('✗ usage: emaki render <deck.json> [--aspect 9:16] [--out film.mp4]')
+  const out = values.out ?? 'film.mp4'
+  const aspect = values.aspect as '16:9' | '1:1' | '9:16' | undefined
+  if (aspect && !['16:9', '1:1', '9:16'].includes(aspect)) fail(`✗ unknown aspect: ${aspect}`)
+
+  // Surface the command being run (studio/CLI parity), then render.
+  process.stdout.write(`▸ emaki render ${file}${aspect ? ` --aspect ${aspect}` : ''} --out ${out}\n`)
+  const { renderDeck } = await import('@emaki/render')
+
+  let lastPct = -1
+  const result = await renderDeck({
+    deckPath: resolve(process.cwd(), file),
+    out: resolve(process.cwd(), out),
+    aspect,
+    onProgress: (p) => {
+      const pct = Math.round(p * 100)
+      if (pct !== lastPct) {
+        lastPct = pct
+        process.stderr.write(`\r  rendering ${pct}%`)
+      }
+    },
+  })
+  process.stderr.write('\r')
+  process.stdout.write(
+    `✓ ${out} · ${result.width}×${result.height} · ${result.durationInFrames} frames @ ${result.fps}fps\n`,
+  )
+}
+
 function main(argv: string[]): void {
   const [cmd, ...rest] = argv
   switch (cmd) {
@@ -145,6 +181,9 @@ function main(argv: string[]): void {
       return cmdSchema(rest)
     case 'init':
       return cmdInit(rest)
+    case 'render':
+      cmdRender(rest).catch((e: unknown) => fail(`✗ render failed: ${(e as Error).message}`))
+      return
     case '-v':
     case '--version':
       process.stdout.write(VERSION + '\n')

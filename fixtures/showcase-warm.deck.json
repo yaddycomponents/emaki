@@ -10,6 +10,23 @@
     { "id": "list", "type": "list", "props": { "title": "What shipped", "items": ["Schema", "Blocks", "Two render paths"] } },
     { "id": "stat", "type": "stat", "props": { "value": "5,400", "label": "lines deleted", "caption": "across three repos" } },
     { "id": "compare", "type": "compare-bars", "props": { "title": "Bundle", "unit": "kB", "rows": [{ "label": "raw", "before": 247, "after": 114 }] } },
-    { "id": "mock", "type": "ui-mock", "props": { "app": "emaki", "title": "the rendered still", "lines": ["Deck loaded.", "Rendering frame 45…"] } }
+    { "id": "mock", "type": "ui-mock", "props": { "app": "emaki", "title": "the rendered still", "lines": ["Deck loaded.", "Rendering frame 45…"] } },
+    { "id": "scene", "type": "ui-scene", "props": {
+      "caption": "The same node tree, rendered by the engine",
+      "states": [{ "id": "loaded", "hold": 3 }],
+      "root": { "kind": "card", "w": 640, "pad": 22, "gap": 16, "children": [
+        { "kind": "row", "gap": 12, "children": [
+          { "kind": "dot", "initials": "e" },
+          { "kind": "col", "gap": 6, "children": [ { "kind": "text", "value": "new-bundle", "weight": "bold" }, { "kind": "text", "value": "main · ready to ship", "tone": "muted", "size": "label" } ] },
+          { "kind": "toggle", "on": true }
+        ] },
+        { "kind": "divider" },
+        { "kind": "row", "gap": 18, "children": [
+          { "kind": "col", "gap": 4, "children": [ { "kind": "count", "to": 5400 }, { "kind": "text", "value": "lines deleted", "tone": "muted", "size": "label" } ] },
+          { "kind": "col", "gap": 4, "children": [ { "kind": "count", "to": 114, "suffix": "kB" }, { "kind": "text", "value": "bundle", "tone": "muted", "size": "label" } ] }
+        ] },
+        { "kind": "field", "label": "Status", "value": "All debt cleared" }
+      ] }
+    } }
   ]
 }

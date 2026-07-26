@@ -16,11 +16,18 @@ import {
 } from "./blocks/statement";
 import { Title16x9, Title9x16, titleTimeline } from "./blocks/title";
 import { UiMock16x9, UiMock9x16, uiMockTimeline } from "./blocks/uiMock";
+import { UiScene16x9, UiScene9x16, uiSceneTimelineFor } from "./blocks/uiScene";
 import { TimelineContext } from "./engine";
 
 export interface EmakiBlock {
   type: string;
   timeline: Timeline;
+  /**
+   * Derive the timeline from a scene's props. Used by data-driven blocks like
+   * `ui-scene` whose timeline depends on the node tree; takes precedence over
+   * the static `timeline` when present.
+   */
+  timelineFor?: (props: unknown) => Timeline;
   /** '16:9' is the fallback layout; declare others as they diverge. */
   layouts: Partial<Record<Aspect, FC<never>>>;
 }
@@ -89,6 +96,16 @@ export const BLOCKS: Record<string, EmakiBlock> = {
       "9:16": UiMock9x16 as FC<never>,
     },
   },
+  "ui-scene": {
+    type: "ui-scene",
+    timeline: [],
+    timelineFor: (props) => uiSceneTimelineFor(props as never),
+    layouts: {
+      "16:9": UiScene16x9 as FC<never>,
+      "1:1": UiScene16x9 as FC<never>,
+      "9:16": UiScene9x16 as FC<never>,
+    },
+  },
 };
 
 export function layoutFor(type: string, aspect: Aspect): FC<never> {
@@ -114,9 +131,12 @@ export const Block: FC<{ scene: Scene; aspect: Aspect }> = ({
   const block = BLOCKS[scene.type];
   if (!block) throw new Error(`Unknown block type: ${scene.type}`);
   const Layout = layoutFor(scene.type, aspect);
+  const timeline = block.timelineFor
+    ? block.timelineFor(scene.props)
+    : block.timeline;
   return createElement(
     TimelineContext.Provider,
-    { value: block.timeline },
+    { value: timeline },
     createElement(
       Layout as FC<Record<string, unknown>>,
       scene.props as Record<string, unknown>,

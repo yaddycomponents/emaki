@@ -4,6 +4,7 @@ import { AnimContext, Block, ThemeProvider } from '@emaki/blocks'
 import { resolveTheme } from '@emaki/themes'
 import type { Deck } from '@emaki/schema'
 import { RemotionAnim } from './RemotionAnim'
+import { RemotionSceneClock } from './RemotionSceneClock'
 import { sceneFrameList, FPS } from './timing'
 
 /**
@@ -21,7 +22,9 @@ export const DeckVideo: FC<{ deck: Deck }> = ({ deck }) => {
           <Series>
             {deck.scenes.map((scene, i) => (
               <Series.Sequence key={scene.id} durationInFrames={frames[i]!}>
-                <Block scene={scene} aspect={deck.aspect} />
+                <RemotionSceneClock>
+                  <Block scene={scene} aspect={deck.aspect} />
+                </RemotionSceneClock>
               </Series.Sequence>
             ))}
           </Series>

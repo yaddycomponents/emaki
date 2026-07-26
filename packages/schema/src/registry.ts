@@ -13,6 +13,12 @@ export interface BlockDef<P extends z.ZodType = z.ZodType> {
   props: P
   /** The words spoken/read in this block — words / wordsPerSecond drives dur. */
   text?: (props: z.infer<P>) => string
+  /**
+   * Intrinsic seconds this block needs regardless of reading time — e.g. a
+   * ui-scene's state holds. The duration calc max()es reading against this, so
+   * a data-driven scene is never cut short.
+   */
+  duration?: (props: z.infer<P>) => number
 }
 
 export function defineBlock<P extends z.ZodType>(def: BlockDef<P>): BlockDef<P> {

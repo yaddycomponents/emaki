@@ -10,6 +10,32 @@
     { "id": "list", "type": "list", "props": { "title": "Three steps", "items": ["Reads the thread", "Drafts a reply", "You hit send"] } },
     { "id": "stat", "type": "stat", "props": { "value": "92%", "label": "replies drafted", "caption": "before a human opens the thread" } },
     { "id": "compare", "type": "compare-bars", "props": { "title": "Response time", "unit": "m", "rows": [{ "label": "manual", "before": 42, "after": 3 }] } },
-    { "id": "mock", "type": "ui-mock", "props": { "app": "inbox · auto-reply", "title": "the drafted reply", "lines": ["Hi Sam —", "Friday works; deck by Thursday."] } }
+    { "id": "mock", "type": "ui-mock", "props": { "app": "inbox · auto-reply", "title": "the drafted reply", "lines": ["Hi Sam —", "Friday works; deck by Thursday."] } },
+    { "id": "scene", "type": "ui-scene", "props": {
+      "caption": "One reply — sent, logged, and a PTP created",
+      "states": [{ "id": "skeleton", "hold": 1 }, { "id": "loaded", "hold": 2.5 }],
+      "root": { "kind": "split", "gap": 16, "children": [
+        { "kind": "col", "w": 300, "gap": 10, "children": [
+          { "kind": "col", "gap": 8, "children": [ { "kind": "bar", "w": "44%", "h": 12 }, { "kind": "bar", "w": "26%", "h": 8, "lite": true } ] },
+          { "kind": "listRow", "title": "52%", "sub": "80%", "active": true },
+          { "kind": "listRow", "title": "46%", "sub": "72%", "badge": "AI Replied" },
+          { "kind": "listRow", "title": "58%", "sub": "84%" },
+          { "kind": "listRow", "title": "40%", "sub": "66%", "badge": "AI Replied" }
+        ] },
+        { "kind": "col", "gap": 14, "children": [
+          { "kind": "bar", "w": "60%", "h": 15, "text": "Acme Corp · Invoice #4021" },
+          { "kind": "card", "gap": 10, "children": [
+            { "kind": "text", "value": "Summary", "tone": "primary", "weight": "bold" },
+            { "kind": "bar", "w": "92%", "h": 8, "lite": true },
+            { "kind": "bar", "w": "78%", "h": 8, "lite": true }
+          ] },
+          { "kind": "row", "gap": 10, "children": [ { "kind": "dot", "initials": "AI" }, { "kind": "badge", "label": "AI Replied", "tone": "ai" } ] },
+          { "kind": "card", "in": ["loaded"], "gap": 8, "children": [
+            { "kind": "text", "value": "Activity created · PTP001", "tone": "primary" },
+            { "kind": "text", "value": "Promise to pay by Aug 15", "tone": "muted", "size": "label" }
+          ] }
+        ] }
+      ] }
+    } }
   ]
 }

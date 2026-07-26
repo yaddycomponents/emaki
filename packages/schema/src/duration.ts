@@ -28,9 +28,9 @@ export function sceneDuration(scene: Scene, opts: DurationOptions = {}): number 
   const wps = opts.wordsPerSecond ?? DEFAULT_WORDS_PER_SECOND
   const words = def?.text ? countWords(def.text(scene.props as never)) : 0
   const reading = words / wps
-  const animationEnd = 0 // Week 2: derive from the block timeline
+  const intrinsic = def?.duration ? def.duration(scene.props as never) : 0
   const hold = scene.hold ?? 0
-  return round2(Math.max(MIN_SCENE_SECONDS, reading, animationEnd) + hold)
+  return round2(Math.max(MIN_SCENE_SECONDS, reading, intrinsic) + hold)
 }
 
 export interface DeckDuration {

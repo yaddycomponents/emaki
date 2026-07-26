@@ -1,3 +1,4 @@
+import { uiSceneDuration, uiSceneProps } from "@emaki/ui";
 import * as z from "zod";
 import { defineBlock } from "./registry";
 
@@ -132,15 +133,19 @@ export const uiMockBlock = defineBlock({
         .string()
         .optional()
         .meta({ description: "App name shown in the mock title bar." }),
-      lines: z
-        .array(z.string())
-        .optional()
-        .meta({
-          description: "Rows of UI text; omit for skeleton placeholders.",
-        }),
+      lines: z.array(z.string()).optional().meta({
+        description: "Rows of UI text; omit for skeleton placeholders.",
+      }),
     })
     .meta({ id: "UiMockProps" }),
   text: (p) => [p.title, p.app, ...(p.lines ?? [])].filter(Boolean).join(" "),
+});
+
+export const uiSceneBlock = defineBlock({
+  type: "ui-scene",
+  props: uiSceneProps,
+  text: (p) => p.caption ?? "",
+  duration: (p) => uiSceneDuration(p),
 });
 
 /** The registered block set the canonical `DeckSchema` validates against. */
@@ -152,6 +157,7 @@ export const BOOTSTRAP_BLOCKS = [
   chapterBlock,
   listBlock,
   uiMockBlock,
+  uiSceneBlock,
 ] as const;
 
 export type TitleProps = z.infer<typeof titleBlock.props>;
@@ -161,3 +167,4 @@ export type CompareBarsProps = z.infer<typeof compareBarsBlock.props>;
 export type ChapterProps = z.infer<typeof chapterBlock.props>;
 export type ListProps = z.infer<typeof listBlock.props>;
 export type UiMockProps = z.infer<typeof uiMockBlock.props>;
+export type UiSceneProps = z.infer<typeof uiSceneBlock.props>;

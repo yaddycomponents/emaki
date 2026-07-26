@@ -121,19 +121,21 @@ export interface ContainerNode {
 export type UiNode = LeafNode | ContainerNode
 
 export const Container: z.ZodType<ContainerNode> = z.lazy(() =>
-  z.object({
-    kind: z.enum(CONTAINER_KINDS),
-    at: z.number().optional(),
-    in: z.array(z.string()).optional(),
-    w: Size.optional(),
-    gap: z.number().optional(),
-    pad: z.number().optional(),
-    stagger: z.number().optional(),
-    children: z.array(UiNode).min(1),
-  }),
+  z
+    .object({
+      kind: z.enum(CONTAINER_KINDS),
+      at: z.number().optional(),
+      in: z.array(z.string()).optional(),
+      w: Size.optional(),
+      gap: z.number().optional(),
+      pad: z.number().optional(),
+      stagger: z.number().optional(),
+      children: z.array(UiNode).min(1),
+    })
+    .meta({ id: 'UiContainer' }),
 )
 
-export const UiNode: z.ZodType<UiNode> = z.union([Leaf, Container])
+export const UiNode: z.ZodType<UiNode> = z.union([Leaf, Container]).meta({ id: 'UiNode' })
 
 export const State = z.object({
   id: z.string(),

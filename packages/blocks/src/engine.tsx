@@ -49,3 +49,15 @@ export function useAnim(): AnimComponent {
 export function useTimeline(): Timeline {
   return useContext(TimelineContext)
 }
+
+/**
+ * Current time within the active scene, in seconds. Drives data-driven state
+ * machines (a ui-scene's skeleton → loaded swap). Defaults to Infinity — the
+ * terminal state — so StaticAnim (tests, thumbnails) and any preview without a
+ * clock render the settled scene. The render path provides the real frame time.
+ */
+export const SceneTimeContext = createContext<number>(Number.POSITIVE_INFINITY)
+
+export function useSceneTime(): number {
+  return useContext(SceneTimeContext)
+}

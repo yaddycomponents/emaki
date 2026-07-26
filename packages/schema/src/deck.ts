@@ -8,6 +8,7 @@ import {
   statementBlock,
   titleBlock,
   uiMockBlock,
+  uiSceneBlock,
 } from "./blocks";
 import { type BlockDef, createRegistry } from "./registry";
 
@@ -45,6 +46,7 @@ const CompareScene = sceneEnvelope("compare-bars", compareBarsBlock.props);
 const ChapterScene = sceneEnvelope("chapter", chapterBlock.props);
 const ListScene = sceneEnvelope("list", listBlock.props);
 const UiMockScene = sceneEnvelope("ui-mock", uiMockBlock.props);
+const UiSceneScene = sceneEnvelope("ui-scene", uiSceneBlock.props);
 
 export const SceneSchema = z
   .discriminatedUnion("type", [
@@ -55,6 +57,7 @@ export const SceneSchema = z
     ChapterScene,
     ListScene,
     UiMockScene,
+    UiSceneScene,
   ])
   .meta({ id: "Scene" });
 

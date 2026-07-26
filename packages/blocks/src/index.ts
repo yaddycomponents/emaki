@@ -13,6 +13,7 @@ export {
 } from "./blocks/statement";
 export { Title16x9, Title9x16, titleTimeline } from "./blocks/title";
 export { UiMock16x9, UiMock9x16, uiMockTimeline } from "./blocks/uiMock";
+export { UiScene16x9, UiScene9x16, uiSceneTimelineFor } from "./blocks/uiScene";
 export * from "./engine";
 export * from "./registry";
 export { makeStyles, type Styles } from "./styles";

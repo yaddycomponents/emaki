@@ -28,6 +28,7 @@
     "@emaki/core": "workspace:*",
     "@emaki/schema": "workspace:*",
     "@emaki/themes": "workspace:*",
+    "@emaki/ui": "workspace:*",
     "framer-motion": "^12.0.0"
   },
   "devDependencies": {

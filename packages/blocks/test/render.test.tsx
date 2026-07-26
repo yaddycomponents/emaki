@@ -1,3 +1,4 @@
+import { timelineEnd } from "@emaki/core";
 import { type Aspect, parseDeck } from "@emaki/schema";
 import { saasProduct, warmEditorial } from "@emaki/themes";
 import { createElement } from "react";
@@ -9,6 +10,7 @@ import {
   blockAnimationEnd,
   BLOCKS,
   ThemeProvider,
+  uiSceneTimelineFor,
 } from "../src";
 
 const parsed = parseDeck({
@@ -61,6 +63,43 @@ const parsed = parseDeck({
         lines: ["Hi Sam,", "Thanks —"],
       },
     },
+    {
+      id: "us",
+      type: "ui-scene",
+      props: {
+        caption: "One reply, sent & logged",
+        states: [
+          { id: "skeleton", hold: 1 },
+          { id: "loaded", hold: 2.5 },
+        ],
+        root: {
+          kind: "split",
+          children: [
+            {
+              kind: "col",
+              w: 300,
+              children: [
+                { kind: "listRow", title: "52%", sub: "80%", active: true },
+                { kind: "listRow", title: "46%", sub: "80%", badge: "AI Replied" },
+              ],
+            },
+            {
+              kind: "col",
+              children: [
+                { kind: "bar", w: "52%", h: 14, text: "Acme Corp · Invoice #4021" },
+                {
+                  kind: "card",
+                  in: ["loaded"],
+                  children: [
+                    { kind: "text", value: "Activity created · PTP001", tone: "primary" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
   ],
 });
 if (!parsed.ok) throw new Error("fixture deck should be valid");
@@ -69,7 +108,7 @@ const deck = parsed.deck;
 const aspects: Aspect[] = ["16:9", "9:16"];
 
 describe("block rendering", () => {
-  it("registers all seven block types with a 16:9 layout", () => {
+  it("registers all block types with a 16:9 layout", () => {
     expect(ALL_BLOCK_TYPES.sort()).toEqual([
       "chapter",
       "compare-bars",
@@ -78,6 +117,7 @@ describe("block rendering", () => {
       "statement",
       "title",
       "ui-mock",
+      "ui-scene",
     ]);
     for (const b of Object.values(BLOCKS))
       expect(b.layouts["16:9"]).toBeTruthy();
@@ -102,9 +142,22 @@ describe("block rendering", () => {
     expect(html).toContain("cleared");
   });
 
-  it("gives every block a positive animation-end time", () => {
-    for (const type of ALL_BLOCK_TYPES)
-      expect(blockAnimationEnd(type)).toBeGreaterThan(0);
+  it("gives every block motion — a static timeline or a derived one", () => {
+    for (const type of ALL_BLOCK_TYPES) {
+      const block = BLOCKS[type]!;
+      if (block.timelineFor) {
+        expect(blockAnimationEnd(type)).toBe(0); // data-driven: no static timeline
+      } else {
+        expect(blockAnimationEnd(type)).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("derives a positive timeline for the ui-scene from its node tree", () => {
+    const scene = deck.scenes.find((s) => s.type === "ui-scene")!;
+    const timeline = uiSceneTimelineFor(scene.props as never);
+    expect(timeline.length).toBeGreaterThan(0);
+    expect(timelineEnd(timeline)).toBeGreaterThan(0);
   });
 
   it("renders the same block differently under two themes (one engine)", () => {

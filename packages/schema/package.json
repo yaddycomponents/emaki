@@ -22,6 +22,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@emaki/ui": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

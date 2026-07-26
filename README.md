@@ -1,68 +1,91 @@
 # Emaki
 
-Films from a JSON file. A **local-first** CLI + studio for code-as-template motion decks — bring your own AI key, render on your own machine, keep the whole thing offline.
+**Films from a JSON file.** Emaki turns build output — bundle stats, git logs, plain numbers — into short motion-graphic films (the kind you'd post to socials). The film is a `deck.json` on disk; rendering is local; and AI comes in through **MCP** — so Emaki never calls a model or stores a key. Your AI app (Claude Code / Claude Desktop) drives the tools; Emaki just does the work.
+
+> Status: **public beta** (`0.1.0-beta.0`). The engine, CLI, and MCP server are live on npm. The visual Studio is in progress.
+
+---
+
+## For designers — use it inside Claude (2 minutes)
+
+You don't clone anything. Add Emaki's MCP server to Claude once:
 
 ```bash
-emaki init                                   # scaffold deck.json
-emaki validate deck.json                     # schema errors, exit 1 on fail
-emaki dur deck.json                          # per-scene + total duration
-emaki schema --out deck.schema.json          # JSON Schema (wire Monaco to it)
-# soon:
-# emaki dev deck.json                        # HMR preview
-# emaki studio [deck.json]                   # full UI
-# emaki render deck.json --aspect 9:16 --out film.mp4
+claude mcp add emaki -- npx -y @emaki/cli@beta mcp serve
 ```
 
-The CLI is the product; the studio is a window onto it. Every studio action maps
-to a command against a file, so nothing is studio-only and everything is
-scriptable and CI-able.
+That's it. Now in Claude Code (or Claude Desktop) you can just ask, and it'll call Emaki's tools for you:
 
-## Why local-first
+> **"Use emaki: extract my rollup stats at `dist/stats.json`, propose a bundle-diff film, apply it to `deck.json`, then render it 9:16."**
 
-- **Render needs real CPU.** Remotion runs on your Node process — no queue, no workers, no per-minute bill.
-- **BYO key only means something locally.** The AI call originates on localhost; your key lives in `.env.local` and never ships to a browser.
-- **Your decks hold real data.** Chunk names, customer numbers, unreleased framing. Local-first is the correct architecture, not a compromise.
+Claude will:
+1. `extract` your stats into a starting deck,
+2. `propose_scenes` (you approve the edits — right in Claude's tool UI),
+3. `apply_ops` to write `deck.json`,
+4. `render` it to an MP4.
 
-## Repo layout
+**Nothing leaves your machine.** No key to paste, no account, no upload.
 
-```
-packages/
-  schema/    zod deck definition, dur calculator, JSON Schema export   ← built first
-  core/      tokens contract, motion presets, primitives, Stage        (Week 1–2)
-  blocks/    the ~9 block types + per-aspect layouts + timelines        (Week 2)
-  themes/    warm-editorial, saas-product                               (Week 3)
-  render/    remotion host + record.mjs fallback                        (Week 2)
-  extract/   rollup stats · lighthouse · git log → partial decks        (Week 5)
-  studio/    the local UI (Vite + CSS Modules + Radix + Monaco)         (Week 4)
-  cli/       emaki studio | render | init | validate
-templates/   first-party packs
-fixtures/    regression decks + frame-diff goldens
-```
+### What Emaki can do (the MCP tools)
 
-## Status — Week 1: schema first
+| Tool | What it does |
+|---|---|
+| `extract` | rollup/vite bundle stats → a starting deck (real numbers only) |
+| `propose_scenes` | suggests scene edits (won't invent metrics without real data) |
+| `apply_ops` | writes the approved edits to `deck.json` |
+| `validate_deck` | checks a deck is well-formed |
+| `render` | renders the deck to an MP4 (local, via Remotion) |
+| `list_blocks` / `list_themes` / `list_templates` | what's available to build with |
 
-Done: the deck schema (`@emaki/schema`), the duration calculator, JSON Schema
-export, and `emaki validate | dur | schema | init`.
+### The blocks you're composing with
+`title` · `statement` · `stat` · `compare-bars` · `chapter` · `list` · `ui-mock` — each adapts across **16:9 / 1:1 / 9:16**. Two themes ship: **warm-editorial** and **saas-product**.
 
-**Gate:** hand-write a `deck.json` and get a useful error when it's wrong.
+> First `render` downloads a small headless Chrome (one time). The editing tools (`extract`/`propose`/`apply`/`validate`) need nothing extra.
+
+---
+
+## For developers — the CLI
 
 ```bash
-pnpm install
-pnpm build
-pnpm --filter @emaki/cli dev validate ../../fixtures/hello.deck.json
+npm i -g @emaki/cli@beta        # or: npx @emaki/cli@beta <command>
+
+emaki init                       # scaffold a deck.json
+emaki validate deck.json         # schema errors, exit 1 on fail
+emaki dur deck.json              # per-scene + total duration
+emaki extract rollup dist/stats.json --out deck.json
+emaki render deck.json --aspect 9:16 --out film.mp4
+emaki schema --out deck.schema.json   # JSON Schema (wire Monaco/editors to it)
+emaki mcp serve                  # start the MCP server (what `claude mcp add` runs)
 ```
 
-## Develop
+A deck is just data:
 
-```bash
-pnpm install
-pnpm build         # turbo: schema → cli
-pnpm test          # vitest
-pnpm typecheck
+```json
+{
+  "version": 1,
+  "aspect": "9:16",
+  "theme": "saas-product",
+  "scenes": [
+    { "id": "open",  "type": "title",  "props": { "kicker": "Bundle", "text": "We cut it in half." } },
+    { "id": "bars",  "type": "compare-bars", "props": { "title": "Raw size", "unit": "kB",
+      "rows": [{ "label": "raw", "before": 247, "after": 114 }] } },
+    { "id": "proof", "type": "stat",   "props": { "value": "−54%", "label": "gzipped" } }
+  ]
+}
 ```
 
-Run the CLI from source (no build) with the `development` export condition:
+Hand-edit it, `emaki render`, post the MP4.
 
-```bash
-pnpm --filter @emaki/cli dev validate fixtures/hello.deck.json
-```
+---
+
+## Why local-first + MCP
+
+- **Render needs real CPU.** It runs on your machine — no queue, no per-minute bill.
+- **Your decks hold real data** (chunk names, customer numbers). Local-first is the correct architecture, not a compromise.
+- **BYO AI is literal.** You connect Emaki to the AI app you already pay for; there's no key to store and nothing to leave your machine.
+
+## Packages
+`@emaki/schema` · `core` · `blocks` · `themes` · `render` · `extract` · `mcp` · `cli` — all on npm under the `beta` tag.
+
+## License
+MIT

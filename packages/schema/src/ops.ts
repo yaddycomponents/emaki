@@ -41,7 +41,9 @@ export interface OpsResult {
  * `skipped`, not thrown.
  */
 export function applyOps(deck: Deck, ops: SceneOp[]): OpsResult {
-  const scenes: Scene[] = structuredClone(deck.scenes)
+  // Deck scenes are plain JSON — a JSON round-trip is a correct deep clone and
+  // avoids depending on the `structuredClone` global (no node types in schema).
+  const scenes: Scene[] = JSON.parse(JSON.stringify(deck.scenes))
   const skipped: OpsResult['skipped'] = []
   let applied = 0
   const indexOf = (id: string) => scenes.findIndex((s) => s.id === id)

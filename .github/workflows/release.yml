@@ -12,6 +12,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing — no token needed once npm is configured
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,8 +25,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # pnpm prefers OIDC (trusted publishing) when id-token:write is present;
+      # falls back to NPM_TOKEN if a trusted publisher isn't configured yet.
       # Publishes every non-private @emaki/* package in dependency order,
-      # rewriting workspace:* → the real version. @emaki/studio stays private.
+      # rewriting workspace:* → the real version.
       - run: pnpm -r publish --access public --tag ${{ inputs.tag }} --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

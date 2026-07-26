@@ -14,7 +14,7 @@ Usage
   emaki schema [--out <file>]             print the deck JSON Schema (wire Monaco to it)
   emaki init [--out <file>] [--force]     scaffold a starter deck.json
   emaki render <deck.json> [--aspect <16:9|1:1|9:16>] [--out <file.mp4>]
-  emaki extract [rollup] <stats.json> [--out <deck.json>] [--aspect] [--theme]
+  emaki extract [rollup|handover] <file.json> [--out <deck.json>] [--aspect] [--theme]
   emaki mcp serve                         start the MCP server (add to Claude Code)
 
 Every command accepts --json for machine-readable output.
@@ -183,23 +183,34 @@ async function cmdExtract(args: string[]): Promise<void> {
       theme: { type: 'string' },
     },
   })
-  // support both `emaki extract rollup stats.json` and `emaki extract stats.json`
-  const source = positionals[0] === 'rollup' ? positionals[1] : positionals[0]
-  if (!source) fail('✗ usage: emaki extract [rollup] <stats.json> [--out deck.json]')
+  // support `emaki extract [rollup|handover] <file>` and `emaki extract <file>`
+  const kinds = new Set(['rollup', 'handover'])
+  const kind = kinds.has(positionals[0] ?? '') ? positionals[0]! : (values.type as string)
+  const source = kinds.has(positionals[0] ?? '') ? positionals[1] : positionals[0]
+  if (!source) fail('✗ usage: emaki extract [rollup|handover] <file> [--out deck.json]')
 
-  const { extractRollup } = await import('@emaki/extract')
+  const { extractRollup, extractHandover } = await import('@emaki/extract')
   let raw: unknown
   try {
     raw = JSON.parse(readFileSync(resolve(process.cwd(), source), 'utf8'))
   } catch (e) {
     return fail(`✗ could not read ${source}: ${(e as Error).message}`)
   }
+  const aspect = values.aspect as '16:9' | '1:1' | '9:16' | undefined
   let deck
   try {
-    deck = extractRollup(raw, {
-      aspect: values.aspect as '16:9' | '1:1' | '9:16' | undefined,
-      theme: values.theme,
-    })
+    if (kind === 'handover') {
+      const r = extractHandover(raw, { aspect, theme: values.theme })
+      if (!r.ok) {
+        const detail = r.issues.length
+          ? r.issues.map((i) => `  · scene ${i.scene}${i.type ? ` (${i.type})` : ''}: ${i.message.split('\n')[0]}`).join('\n')
+          : r.message
+        return fail(`✗ handover did not validate:\n${detail}`)
+      }
+      deck = r.deck
+    } else {
+      deck = extractRollup(raw, { aspect, theme: values.theme })
+    }
   } catch (e) {
     return fail(`✗ ${(e as Error).message}`)
   }

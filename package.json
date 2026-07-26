@@ -16,6 +16,7 @@
     "emaki:dev": "tsx --conditions development packages/cli/src/index.ts",
     "goldens": "tsx --conditions development scripts/goldens.mjs generate",
     "goldens:check": "tsx --conditions development scripts/goldens.mjs check",
+    "agents": "tsx --conditions development scripts/write-agents.mjs",
     "changeset": "changeset",
     "release": "changeset publish"
   },

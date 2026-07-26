@@ -1,18 +1,23 @@
-import { extractRollup } from "@emaki/extract";
+import { extractHandover, extractRollup } from "@emaki/extract";
 import {
   applyOps,
   Aspect,
+  type BlockDef,
   BOOTSTRAP_BLOCKS,
+  createRegistry,
   type Deck,
+  deckJsonSchema,
   parseDeck,
   SceneOp,
 } from "@emaki/schema";
 import { THEMES } from "@emaki/themes";
+import { CONTAINER_KINDS, LEAF_KINDS } from "@emaki/ui";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as z from "zod";
+import { AGENT_GUIDE } from "./guide";
 
 const FIRST_PARTY_TEMPLATES = [
   "release-notes",
@@ -46,7 +51,81 @@ function readDeck(
   return r.ok ? { ok: true, deck: r.deck } : { ok: false, message: r.message };
 }
 
-const CATALOGUE = BOOTSTRAP_BLOCKS.map((b) => `- ${b.type}`).join("\n");
+const REGISTRY = createRegistry(BOOTSTRAP_BLOCKS);
+
+/** Prop names of a block, from the same Zod def that validates it. */
+function propNames(block: BlockDef): string[] {
+  const js = z.toJSONSchema(block.props, { target: "draft-7" }) as {
+    properties?: Record<string, unknown>;
+  };
+  return Object.keys(js.properties ?? {});
+}
+
+const CATALOGUE = BOOTSTRAP_BLOCKS.map(
+  (b) => `- ${b.type} — props: ${propNames(b).join(", ") || "(none)"}`,
+).join("\n");
+
+/** A readable prop reference for one block: name (type) [required] — description. */
+function blockReference(type: string): string | null {
+  const block = REGISTRY[type];
+  if (!block) return null;
+  const js = z.toJSONSchema(block.props, { target: "draft-7" }) as {
+    properties?: Record<string, { type?: string; description?: string }>;
+    required?: string[];
+  };
+  const required = new Set(js.required ?? []);
+  const lines = Object.entries(js.properties ?? {}).map(([name, def]) => {
+    const req = required.has(name) ? " [required]" : "";
+    const t = def.type ? ` (${def.type})` : "";
+    const desc = def.description ? ` — ${def.description}` : "";
+    return `- ${name}${t}${req}${desc}`;
+  });
+  const tail =
+    type === "ui-scene"
+      ? "\n\n`root` is a node tree — call describe_ui_nodes for the vocabulary."
+      : "";
+  return `Block "${type}"\n${lines.join("\n")}${tail}`;
+}
+
+const UI_NODE_DOCS: Record<string, string> = {
+  row: "horizontal flex container",
+  col: "vertical flex container",
+  split: "two panes side by side",
+  panel: "boxed vertical container (surface, border)",
+  card: "boxed container with padding + shadow",
+  bar: "shimmer bar; add `text` to become real text once loaded (w, h, lite)",
+  text: "real text (value, tone, size, weight, mono)",
+  badge: "pill label (label, tone)",
+  dot: "avatar circle (size, initials)",
+  icon: "small icon from the allowlist (name, tone)",
+  toggle: "switch (on)",
+  count: "number, optionally counted up (to, prefix, suffix)",
+  divider: "hairline rule",
+  field: "label + value pair",
+  listRow:
+    "avatar + title/sub rows + optional badge (title, sub, badge, active)",
+};
+
+function uiNodeReference(): string {
+  const containers = CONTAINER_KINDS.map(
+    (k) => `- ${k} — ${UI_NODE_DOCS[k] ?? "container"}`,
+  ).join("\n");
+  const leaves = LEAF_KINDS.map(
+    (k) => `- ${k} — ${UI_NODE_DOCS[k] ?? "leaf"}`,
+  ).join("\n");
+  return [
+    "A ui-scene `root` is a node tree. Constrained flex only — no grid/absolute/responsive.",
+    "",
+    "Containers (have `children`; optional w, gap, pad, stagger):",
+    containers,
+    "",
+    "Leaves:",
+    leaves,
+    "",
+    "states: [{ id, hold }] (e.g. skeleton → loaded). `in:[state]` limits a node to those states.",
+    "Reveal timing is derived from the tree — do not set per-node delays.",
+  ].join("\n");
+}
 
 /**
  * Build the Emaki MCP server. Every tool's schema comes from the same Zod defs
@@ -58,7 +137,7 @@ export function createServer(): McpServer {
     { name: "emaki", version: "0.1.0" },
     {
       instructions:
-        "Emaki turns a deck.json into short motion films. Propose edits as ops, then apply_ops writes them to disk; Studio hot-reloads. Never fabricate specific metrics — pass grounding (rollup/lighthouse/git) or use extract.",
+        "Emaki turns a deck.json into short motion films. Read the `emaki://guide` resource first. Loop: extract or build_deck (a source → a deck) → validate_deck → apply_ops (writes disk; Studio hot-reloads) → render. To turn a PDF/screenshot/handover into a film, YOU read it and emit a lenient handover, then call build_deck. Never fabricate specific metrics — pass grounding or use words. For ui-scene props call describe_ui_nodes; for any block call describe_block.",
     },
   );
 
@@ -79,10 +158,39 @@ export function createServer(): McpServer {
   server.registerTool(
     "list_blocks",
     {
-      description: "List the block types available to compose scenes from.",
+      description:
+        "List the block types available to compose scenes from, with their prop names.",
       inputSchema: {},
     },
     async () => text(`Available blocks:\n${CATALOGUE}`),
+  );
+
+  server.registerTool(
+    "describe_block",
+    {
+      description:
+        "The exact props of one block — name, type, required, description — from the schema. Call before authoring a scene.",
+      inputSchema: { type: z.string() },
+    },
+    async ({ type }) => {
+      const ref = blockReference(type);
+      return ref
+        ? text(ref)
+        : text(
+            `Unknown block "${type}". Known: ${BOOTSTRAP_BLOCKS.map((b) => b.type).join(", ")}.`,
+            true,
+          );
+    },
+  );
+
+  server.registerTool(
+    "describe_ui_nodes",
+    {
+      description:
+        "The ui-scene node vocabulary — containers, leaves, states, and rules. Read this before building a ui-scene `root` tree.",
+      inputSchema: {},
+    },
+    async () => text(uiNodeReference()),
   );
 
   server.registerTool(
@@ -148,6 +256,46 @@ export function createServer(): McpServer {
   );
 
   server.registerTool(
+    "build_deck",
+    {
+      description:
+        "Turn a lenient handover (scenes as { type, ...props }, no ids/version needed) into a validated deck. This is how a PDF/screenshot/chat handover becomes a film: YOU read the source and emit the handover; Emaki validates it per-scene and reports precise fixes. Writes to `out` if given, else returns the deck JSON.",
+      inputSchema: {
+        handover: z
+          .unknown()
+          .describe(
+            'e.g. { title, aspect, theme, scenes: [{ type:"title", text:"…" }, { type:"ui-scene", root:{…} }] }',
+          ),
+        aspect: Aspect.optional(),
+        theme: z.string().optional(),
+        out: z.string().optional(),
+      },
+    },
+    async ({ handover, aspect, theme, out }) => {
+      const r = extractHandover(handover, { aspect, theme });
+      if (!r.ok) {
+        const detail = r.issues.length
+          ? r.issues
+              .map(
+                (i) =>
+                  `  · scene ${i.scene}${i.type ? ` (${i.type})` : ""}: ${i.message.split("\n")[0]}`,
+              )
+              .join("\n")
+          : r.message;
+        return text(`✗ handover did not validate:\n${detail}`, true);
+      }
+      const notes = r.notes.length ? ` · ${r.notes.join(" ")}` : "";
+      if (out) {
+        writeFileSync(resolve(out), JSON.stringify(r.deck, null, 2) + "\n");
+        return text(
+          `✓ built ${r.deck.scenes.length}-scene deck → ${out}${notes}`,
+        );
+      }
+      return text(JSON.stringify(r.deck, null, 2));
+    },
+  );
+
+  server.registerTool(
     "apply_ops",
     {
       description:
@@ -178,14 +326,14 @@ export function createServer(): McpServer {
     "extract",
     {
       description:
-        "Extract a partial deck from build output (rollup stats). Writes to `out` if given, else returns the deck.",
+        "Extract a deck from a file: `rollup` (vite/rollup bundle stats → real sizes) or `handover` (a lenient handover JSON → validated deck). Writes to `out` if given, else returns the deck.",
       inputSchema: {
         source: z.string(),
-        type: z.enum(["rollup"]).default("rollup"),
+        type: z.enum(["rollup", "handover"]).default("rollup"),
         out: z.string().optional(),
       },
     },
-    async ({ source, out }) => {
+    async ({ source, type, out }) => {
       let raw: unknown;
       try {
         raw = JSON.parse(readFileSync(resolve(source), "utf8"));
@@ -196,10 +344,16 @@ export function createServer(): McpServer {
         );
       }
       let deck: Deck;
-      try {
-        deck = extractRollup(raw);
-      } catch (e) {
-        return text(`✗ ${(e as Error).message}`, true);
+      if (type === "handover") {
+        const r = extractHandover(raw);
+        if (!r.ok) return text(`✗ ${r.message}`, true);
+        deck = r.deck;
+      } else {
+        try {
+          deck = extractRollup(raw);
+        } catch (e) {
+          return text(`✗ ${(e as Error).message}`, true);
+        }
       }
       if (out) {
         writeFileSync(resolve(out), JSON.stringify(deck, null, 2) + "\n");
@@ -234,6 +388,40 @@ export function createServer(): McpServer {
         return text(`✗ render failed: ${(e as Error).message}`, true);
       }
     },
+  );
+
+  server.registerResource(
+    "guide",
+    "emaki://guide",
+    {
+      title: "Emaki agent guide",
+      description: "How to drive Emaki: the loop, the rules, the vocabulary.",
+      mimeType: "text/markdown",
+    },
+    async () => ({
+      contents: [
+        { uri: "emaki://guide", mimeType: "text/markdown", text: AGENT_GUIDE },
+      ],
+    }),
+  );
+
+  server.registerResource(
+    "schema",
+    "emaki://schema",
+    {
+      title: "Emaki deck JSON Schema",
+      description: "The draft-7 JSON Schema every deck validates against.",
+      mimeType: "application/json",
+    },
+    async () => ({
+      contents: [
+        {
+          uri: "emaki://schema",
+          mimeType: "application/json",
+          text: JSON.stringify(deckJsonSchema(), null, 2),
+        },
+      ],
+    }),
   );
 
   return server;

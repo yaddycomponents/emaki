@@ -103,6 +103,20 @@ export const Leaf = z.discriminatedUnion('kind', [
 ])
 export type LeafNode = z.infer<typeof Leaf>
 
+/** The leaf node kinds, in declared order — the enumerable half of the vocabulary. */
+export const LEAF_KINDS = [
+  'bar',
+  'text',
+  'badge',
+  'dot',
+  'icon',
+  'toggle',
+  'count',
+  'divider',
+  'field',
+  'listRow',
+] as const
+
 // ── recursive containers ─────────────────────────────────────────────────────
 export const CONTAINER_KINDS = ['row', 'col', 'panel', 'split', 'card'] as const
 

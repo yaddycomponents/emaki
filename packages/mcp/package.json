@@ -1,6 +1,6 @@
 {
   "name": "@emaki/mcp",
-  "version": "0.1.0-beta.6",
+  "version": "0.1.0-beta.7",
   "description": "The Emaki MCP server — build_deck, extract, validate, apply_ops, render, theme_import, describe_block/ui_nodes; schemas from the same Zod defs.",
   "type": "module",
   "main": "./dist/index.js",

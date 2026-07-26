@@ -67,8 +67,13 @@ live vocabulary. In brief:
   instead of floating. \`none\` (default) is a bare mock.
 - **transitions**: state changes \`crossfade\` by default (skeleton dissolves into
   text) over \`transitionMs\`; set \`transition:"cut"\` for a hard swap.
-- **type sizes** (\`text\`/\`bar\` \`size\`): eyebrow, label, body, md, lg, h2,
-  metric — a small UI ramp (~11–26px), not slide-scale.
+- **type sizes** (\`text\`/\`bar\` \`size\`): ONLY eyebrow, label, body, md, lg, h2,
+  metric — a small UI ramp (~11–26px). Theme tokens (rowLabel, chapter, …) are
+  NOT valid node sizes.
+- **layout**: containers take \`justify\` (start=default | center | end | between)
+  and \`align\` (start | center | end | stretch). A plain \`row\` packs items at the
+  start (no surprise space-between); only \`split\` fills its two panes. Reach for
+  \`justify:"between"\` when you actually want items pushed apart.
 
 ## Text safety
 Prefer plain ASCII punctuation. The default fonts don't cover decorative glyphs

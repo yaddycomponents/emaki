@@ -577,13 +577,30 @@ function listRow(node: Extract<LeafNode, { kind: "listRow" }>, ctx: Ctx): ReactN
 
 const IS_ROW = new Set(["row", "split"]);
 
-function containerStyle(node: Extract<UiNode, { children: UiNode[] }>, t: UiTheme): CSSProperties {
+const JUSTIFY: Record<string, CSSProperties["justifyContent"]> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  between: "space-between",
+};
+const ALIGN: Record<string, CSSProperties["alignItems"]> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  stretch: "stretch",
+};
+
+function containerStyle(node: Extract<UiNode, { children: UiNode[]; justify?: string; align?: string }>, t: UiTheme): CSSProperties {
   const boxed = node.kind === "card" || node.kind === "panel";
+  const row = IS_ROW.has(node.kind);
   return {
     display: "flex",
-    flexDirection: IS_ROW.has(node.kind) ? "row" : "column",
+    flexDirection: row ? "row" : "column",
     gap: node.gap ?? 10,
-    alignItems: "stretch",
+    // Rows centre their items by default; columns stretch. Main axis packs at
+    // start unless asked — never space-between by surprise.
+    alignItems: node.align ? ALIGN[node.align] : row ? "center" : "stretch",
+    justifyContent: node.justify ? JUSTIFY[node.justify] : "flex-start",
     ...(node.w !== undefined ? { width: len(node.w), flexShrink: 0 } : {}),
     ...(boxed
       ? {
@@ -609,12 +626,17 @@ function renderNode(node: UiNode, path: string, ctx: Ctx, Anim: AnimLike): React
   if (op === null || op <= 0.001) return null;
 
   if (isContainer(node)) {
-    const rowParent = IS_ROW.has(node.kind);
+    const isRow = IS_ROW.has(node.kind);
     const children = node.children.map((child, i) => {
       const el = renderNode(child, `${path}.${i}`, ctx, Anim);
       if (el === null) return null;
-      const grow = rowParent && !hasWidth(child);
-      return createElement("div", { key: i, style: grow ? { flex: "1 1 0", minWidth: 0 } : { minWidth: 0 } }, el);
+      // Only `split` panes fill the axis; ordinary row items size to their
+      // content (no auto space-between) and never shrink below it (no overlap).
+      let style: CSSProperties;
+      if (node.kind === "split" && !hasWidth(child)) style = { flex: "1 1 0", minWidth: 0 };
+      else if (isRow) style = { flexShrink: 0, minWidth: 0 };
+      else style = { minWidth: 0 };
+      return createElement("div", { key: i, style }, el);
     });
     const style = { ...containerStyle(node, ctx.t), ...(op < 1 ? { opacity: op } : {}) };
     return createElement("div", { style }, children);

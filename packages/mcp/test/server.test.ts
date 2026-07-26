@@ -63,6 +63,23 @@ describe("emaki mcp server", () => {
     expect(textOf(res)).toMatch(/scene 0/);
   });
 
+  it("build_deck pinpoints a bad ui-scene node (leaf + field)", async () => {
+    const client = await connect();
+    const res = await client.callTool({
+      name: "build_deck",
+      arguments: {
+        handover: {
+          scenes: [
+            { type: "ui-scene", root: { kind: "col", children: [{ kind: "text", value: "Compose", size: "rowLabel" }] } },
+          ],
+        },
+      },
+    });
+    expect(res.isError).toBe(true);
+    const t = textOf(res);
+    expect(t).toMatch(/root\.children\[0\] \(text\): size/);
+  });
+
   it("describe_ui_nodes returns the node vocabulary", async () => {
     const client = await connect();
     const res = await client.callTool({

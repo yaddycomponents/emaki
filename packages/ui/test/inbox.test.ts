@@ -62,6 +62,31 @@ const INBOX = {
   },
 }
 
+import { explainNode } from '../src'
+
+describe('ui scene — layout controls + node errors', () => {
+  it('parses justify/align on containers', () => {
+    const p = uiSceneProps.parse({
+      root: { kind: 'row', justify: 'between', align: 'center', children: [{ kind: 'text', value: 'a' }, { kind: 'text', value: 'b' }] },
+    })
+    const root = p.root as { justify?: string; align?: string }
+    expect(root.justify).toBe('between')
+    expect(root.align).toBe('center')
+  })
+
+  it('explainNode names the bad leaf, field, and valid values (the rowLabel case)', () => {
+    const e = explainNode({ kind: 'col', children: [{ kind: 'text', value: 'Compose', size: 'rowLabel' }] })
+    expect(e).toMatch(/children\[0\] \(text\): size/)
+    expect(e).toMatch(/body/) // lists the valid options
+    expect(e).not.toMatch(/rowLabel"?\s*(is|:)?\s*valid/) // it's rejected, not accepted
+  })
+
+  it('explainNode flags an unknown kind and returns null for a valid tree', () => {
+    expect(explainNode({ kind: 'col', children: [{ kind: 'blorp' }] })).toMatch(/unknown kind "blorp"/)
+    expect(explainNode({ kind: 'row', justify: 'between', children: [{ kind: 'text', value: 'ok' }] })).toBeNull()
+  })
+})
+
 describe('ui scene — chrome, transitions, product primitives', () => {
   it('parses chrome + transition scene props with defaults', () => {
     const bare = uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'text', value: 'x' }] } })

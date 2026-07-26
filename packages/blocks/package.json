@@ -1,6 +1,6 @@
 {
   "name": "@emaki/blocks",
-  "version": "0.1.0-beta.5",
+  "version": "0.1.0-beta.6",
   "description": "The Emaki block set — title, statement, stat, compare-bars — each with per-aspect layouts and a declared timeline.",
   "type": "module",
   "main": "./dist/index.js",

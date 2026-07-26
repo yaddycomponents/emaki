@@ -12,7 +12,7 @@ import {
   SceneOp,
 } from "@emaki/schema";
 import { type BrandInput, buildTheme, THEMES } from "@emaki/themes";
-import { CONTAINER_KINDS, ICON_NAMES, LEAF_KINDS } from "@emaki/ui";
+import { CONTAINER_KINDS, explainNode, ICON_NAMES, LEAF_KINDS } from "@emaki/ui";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -49,6 +49,22 @@ function coerceJson(x: unknown): unknown {
   } catch {
     return x;
   }
+}
+
+/** Precise per-node errors for any ui-scene in a scene list — names leaf + field. */
+function uiSceneNodeErrors(scenes: unknown): string[] {
+  if (!Array.isArray(scenes)) return [];
+  const out: string[] = [];
+  scenes.forEach((s, i) => {
+    const o = s as Record<string, unknown>;
+    if (o?.type !== "ui-scene") return;
+    const props = (o.props ?? o) as Record<string, unknown>;
+    if (props?.root) {
+      const e = explainNode(props.root, `scenes[${i}].root`);
+      if (e) out.push(e);
+    }
+  });
+  return out;
 }
 
 function readDeck(
@@ -138,7 +154,7 @@ function uiNodeReference(): string {
   return [
     "A ui-scene `root` is a node tree. Constrained flex only — no grid/absolute/responsive.",
     "",
-    "Containers (have `children`; optional w, gap, pad, stagger):",
+    "Containers (have `children`; optional w, gap, pad, stagger, justify, align):",
     containers,
     "",
     "Leaves:",
@@ -150,7 +166,8 @@ function uiNodeReference(): string {
     `icon names (allowlist): ${ICON_NAMES.join(", ")}.`,
     "dot/badge/icon accept a `color` (hex) that overrides the tone — e.g. coloured status dots.",
     "listRow: `subText` gives a real subtitle (subject/preview/company); `sub` alone is shimmer.",
-    "text/bar `size`: eyebrow, label, body, md, lg, h2, metric (a small UI ramp, ~11–26px).",
+    "text/bar `size`: ONLY eyebrow, label, body, md, lg, h2, metric (a UI ramp ~11–26px). Theme tokens like rowLabel/chapter are NOT valid here.",
+    "layout: `justify` = start (default) | center | end | between; `align` = start | center | end | stretch. `split` fills two panes; a plain `row` packs items at start.",
     "",
     "scene props: `chrome` = app (top bar + nav rail) | window (title bar) | none; `title` names it.",
     "`transition` = crossfade (skeleton→text dissolves) | cut; `transitionMs` sets the crossfade length.",
@@ -178,8 +195,13 @@ export function createServer(): McpServer {
       inputSchema: { deck: z.unknown() },
     },
     async ({ deck }) => {
-      const r = parseDeck(coerceJson(deck));
-      if (!r.ok) return text(`✗ invalid:\n${r.message}`, true);
+      const input = coerceJson(deck);
+      const r = parseDeck(input);
+      if (!r.ok) {
+        const nodes = uiSceneNodeErrors((input as { scenes?: unknown })?.scenes);
+        const detail = nodes.length ? `\n${nodes.join("\n")}` : "";
+        return text(`✗ invalid:\n${r.message}${detail}`, true);
+      }
       const warn = glyphWarning(r.deck);
       return text(
         `✓ valid · ${r.deck.scenes.length} scenes · ${r.deck.aspect}${warn ? `\n${warn}` : ""}`,
@@ -347,7 +369,8 @@ export function createServer(): McpServer {
       },
     },
     async ({ handover, aspect, theme, out }) => {
-      const r = extractHandover(coerceJson(handover), { aspect, theme });
+      const input = coerceJson(handover);
+      const r = extractHandover(input, { aspect, theme });
       if (!r.ok) {
         const detail = r.issues.length
           ? r.issues
@@ -357,7 +380,9 @@ export function createServer(): McpServer {
               )
               .join("\n")
           : r.message;
-        return text(`✗ handover did not validate:\n${detail}`, true);
+        const nodes = uiSceneNodeErrors((input as { scenes?: unknown })?.scenes);
+        const nodeDetail = nodes.length ? `\n${nodes.join("\n")}` : "";
+        return text(`✗ handover did not validate:\n${detail}${nodeDetail}`, true);
       }
       const warn = glyphWarning(r.deck);
       const notes =

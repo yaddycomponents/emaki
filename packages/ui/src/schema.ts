@@ -222,6 +222,11 @@ export const LEAF_KINDS = [
 // ── recursive containers ─────────────────────────────────────────────────────
 export const CONTAINER_KINDS = ['row', 'col', 'panel', 'split', 'card'] as const
 
+/** Main-axis packing (justify) — defaults to `start`, never space-between. */
+export const Justify = z.enum(['start', 'center', 'end', 'between'])
+/** Cross-axis alignment (align) — rows default to `center`, columns to `stretch`. */
+export const Align = z.enum(['start', 'center', 'end', 'stretch'])
+
 export interface ContainerNode {
   kind: (typeof CONTAINER_KINDS)[number]
   at?: number
@@ -229,6 +234,10 @@ export interface ContainerNode {
   w?: number | string
   gap?: number
   pad?: number
+  /** Main-axis packing. Default `start`. */
+  justify?: 'start' | 'center' | 'end' | 'between'
+  /** Cross-axis alignment. Default: row `center`, col `stretch`. */
+  align?: 'start' | 'center' | 'end' | 'stretch'
   /** Stagger between this container's children, in seconds. */
   stagger?: number
   children: UiNode[]
@@ -245,6 +254,8 @@ export const Container: z.ZodType<ContainerNode> = z.lazy(() =>
       w: Size.optional(),
       gap: z.number().optional(),
       pad: z.number().optional(),
+      justify: Justify.optional(),
+      align: Align.optional(),
       stagger: z.number().optional(),
       children: z.array(UiNode).min(1),
     })

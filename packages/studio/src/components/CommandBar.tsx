@@ -1,33 +1,34 @@
-import { useState } from 'react'
 import { useStudio } from '../store'
 import s from './CommandBar.module.css'
 
-// The studio surfaces the CLI command its current state maps to — devs learn the
-// CLI by using the GUI, and the GUI stops being a black box (spec §0b rule 3).
+// Every meaningful action writes here — the command it maps to, its result, and
+// elapsed time. A trust device, not decoration (design §3 / spec §0b rule 3).
 export function CommandBar() {
-  const deck = useStudio((x) => x.deck)
-  const aspect = deck?.aspect ?? '9:16'
-  const cmd = `emaki render deck.json --aspect ${aspect} --out film.mp4`
-  const [copied, setCopied] = useState(false)
+  const log = useStudio((x) => x.commandLog)
+  const last = log[log.length - 1]
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(cmd)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1200)
-    } catch {
-      /* clipboard unavailable — no-op */
-    }
+  const copy = () => {
+    if (last) navigator.clipboard?.writeText(last.command).catch(() => {})
   }
 
   return (
     <footer className={s.bar}>
-      <span className={s.label}>CLI</span>
-      <code className={s.cmd}>{cmd}</code>
+      <span className={s.prompt}>›</span>
+      <code className={s.cmd}>{last?.command ?? ''}</code>
+      {last ? (
+        <span className={s.result}>
+          {last.result}
+          {last.ms ? ` · ${last.ms}ms` : ''}
+        </span>
+      ) : null}
       <div className={s.spacer} />
-      <button type="button" className={s.copy} onClick={copy}>
-        {copied ? 'copied' : 'copy'}
+      <button type="button" className={s.link} onClick={copy}>
+        copy
       </button>
+      <span className={s.sep}>·</span>
+      <span className={s.muted}>history ({log.length})</span>
+      <span className={s.sep}>·</span>
+      <span className={s.muted}>⌘K palette</span>
     </footer>
   )
 }

@@ -1,50 +1,108 @@
-.panel {
+.body {
   height: 100%;
-  background: var(--surface);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow-y: auto;
 }
 
-.header {
+.head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-4) var(--space-3);
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-bottom: var(--bd-soft);
+}
+
+.chip {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: var(--track-wide);
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: var(--hairline) solid var(--accent-line);
+  border-radius: var(--r-sm);
+  padding: var(--s-1) var(--s-3);
+}
+
+.block {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.src {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding: var(--s-6) var(--s-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--text-3);
 }
 
-.file {
-  color: var(--blue);
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.editor {
-  flex: 1;
-  min-height: 0;
-  resize: none;
-  border: none;
-  outline: none;
-  background: var(--sunken);
+.control {
+  background: var(--raised);
+  border: var(--bd);
+  border-radius: var(--r-sm);
+  padding: var(--s-3) var(--s-4);
   color: var(--text);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  padding: var(--space-4);
-  tab-size: 2;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--t), box-shadow var(--t);
 }
 
-.error {
-  padding: var(--space-3) var(--space-4);
-  background: rgba(217, 107, 74, 0.12);
-  border-top: var(--hairline) solid var(--danger);
-  color: var(--danger);
+.control:focus {
+  border-color: var(--accent);
+  box-shadow: var(--focus);
+}
+
+.mono {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  white-space: pre-wrap;
+  font-size: 11px;
+}
+
+.readonly {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+  padding: var(--s-2) 0;
+}
+
+.derived {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.callout {
+  margin: auto var(--s-5) var(--s-5);
+  padding: var(--s-4);
+  background: var(--del-bg);
+  border: var(--hairline) solid var(--del-line);
+  border-radius: var(--r-md);
+  font-size: 11px;
+  color: var(--err);
+}
+
+.calloutRef {
+  font-family: var(--font-mono);
+  font-weight: 600;
 }

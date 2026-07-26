@@ -1,7 +1,7 @@
 .app {
   height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: var(--h-topbar) 1fr var(--h-transport) var(--h-cmdbar);
   background: var(--bg);
 }
 
@@ -9,21 +9,26 @@
   min-height: 0;
 }
 
+.clean {
+  height: 100%;
+  background: var(--void);
+}
+
 .handle {
   width: var(--hairline);
   background: var(--line);
   position: relative;
   outline: none;
-  transition: background 0.15s var(--ease);
+  transition: background var(--t);
 }
 
 .handle::after {
   content: "";
   position: absolute;
-  inset: 0 calc(-1 * var(--space-1));
+  inset: 0 calc(-1 * var(--s-2));
 }
 
 .handle:hover,
 .handle[data-resize-handle-state="drag"] {
-  background: var(--accent);
+  background: var(--accent-line);
 }

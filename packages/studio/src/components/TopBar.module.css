@@ -1,0 +1,180 @@
+.bar {
+  height: var(--h-topbar);
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  padding: 0 var(--s-5);
+  background: var(--panel-2);
+  border-bottom: var(--bd);
+}
+
+.mark {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  flex: none;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.path {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.seg {
+  display: flex;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  background: var(--panel);
+  border-radius: var(--r-md);
+}
+
+.segItem {
+  border: var(--hairline) solid transparent;
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--t), background var(--t);
+}
+
+.segItem:hover {
+  color: var(--text);
+}
+
+.segOn {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.theme {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, #d98c9a, #8aa9a6);
+  border: var(--bd);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.statusErr {
+  color: var(--err);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dotOk {
+  background: var(--ok);
+}
+
+.dotErr {
+  background: var(--err);
+}
+
+.dotIdle {
+  background: var(--text-3);
+}
+
+.rule {
+  width: var(--hairline);
+  height: 18px;
+  background: var(--line);
+}
+
+.mcp {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+  cursor: default;
+}
+
+.iconBtn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: var(--bd);
+  background: var(--panel);
+  color: var(--text-2);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: color var(--t), border-color var(--t);
+}
+
+.iconBtn:hover {
+  color: var(--text);
+  border-color: var(--accent-line);
+}
+
+.render {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  height: 27px;
+  padding: 0 var(--s-5);
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.tip {
+  max-width: 240px;
+  background: var(--raised);
+  border: var(--bd);
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+  font-size: 11px;
+  color: var(--text-2);
+  box-shadow: var(--shadow);
+}
+
+.tip code {
+  font-family: var(--font-mono);
+  color: var(--accent);
+}

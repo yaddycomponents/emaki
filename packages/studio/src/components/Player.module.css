@@ -1,9 +1,16 @@
-.stage {
-  position: relative;
+.wrap {
   height: 100%;
-  width: 100%;
-  background: var(--sunken);
+  display: flex;
+  flex-direction: column;
+  background: var(--void);
+  min-width: 0;
+}
+
+.stage {
+  flex: 1;
+  position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
 .frame {
@@ -15,20 +22,28 @@
   overflow: hidden;
 }
 
-.empty {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
 .scene {
   position: absolute;
   inset: 0;
 }
 
 .empty {
-  color: var(--faint);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-3);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: 12px;
+}
+
+.info {
+  height: 20px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
 }

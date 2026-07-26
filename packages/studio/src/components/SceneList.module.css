@@ -1,0 +1,136 @@
+.panel {
+  height: 100%;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.header {
+  height: 30px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--s-5);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom: var(--bd-soft);
+}
+
+.add {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--t), background var(--t);
+}
+
+.add:hover {
+  color: var(--text);
+  background: var(--raised);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.row {
+  height: var(--h-row);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 0 var(--s-5);
+  border: none;
+  border-bottom: var(--bd-soft);
+  background: transparent;
+  text-align: left;
+  cursor: grab;
+  box-shadow: inset 0 0 0 0 var(--accent);
+  transition: background var(--t);
+}
+
+.row:hover {
+  background: var(--panel-2);
+}
+
+.active {
+  background: var(--accent-soft);
+  box-shadow: inset 2px 0 0 0 var(--accent);
+}
+
+.index {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-3);
+  width: 20px;
+  flex: none;
+}
+
+.vdot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.vok {
+  background: var(--ok);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.headline {
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.type {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+.dur {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  flex: none;
+}
+
+.footer {
+  height: var(--h-cmdbar);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--s-5);
+  border-top: var(--bd);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.footMeta {
+  color: var(--text-2);
+}

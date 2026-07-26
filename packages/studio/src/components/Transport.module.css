@@ -1,0 +1,126 @@
+.bar {
+  height: var(--h-transport);
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  padding: 0 var(--s-5);
+  background: var(--panel-2);
+  border-top: var(--bd);
+}
+
+.cluster {
+  display: flex;
+  gap: var(--s-2);
+  flex: none;
+}
+
+.btn {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: var(--bd);
+  background: var(--raised);
+  color: var(--text-2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--t), border-color var(--t);
+}
+
+.btn:hover {
+  color: var(--text);
+  border-color: var(--accent-line);
+}
+
+.play {
+  width: 30px;
+  color: var(--text);
+}
+
+.playOn {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  min-width: 96px;
+  flex: none;
+}
+
+.timeSep {
+  color: var(--text-3);
+}
+
+.scrubber {
+  flex: 1;
+  display: flex;
+  gap: var(--s-1);
+  height: 14px;
+  align-items: stretch;
+}
+
+.seg {
+  position: relative;
+  border: var(--hairline) solid transparent;
+  background: var(--raised);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--t), border-color var(--t);
+}
+
+.seg:hover {
+  border-color: var(--accent-line);
+}
+
+.segOn {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.segNum {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+  height: 24px;
+  padding: 0 var(--s-4);
+  border: var(--bd);
+  background: var(--raised);
+  color: var(--text-2);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  transition: color var(--t), border-color var(--t);
+}
+
+.toggle:hover {
+  color: var(--text);
+  border-color: var(--accent-line);
+}
+
+.toggleOn {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3);
+  flex: none;
+}

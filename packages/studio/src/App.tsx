@@ -1,28 +1,47 @@
+import { useEffect } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import { Toolbar } from './components/Toolbar'
-import { SceneTree } from './components/SceneTree'
+import { TopBar } from './components/TopBar'
+import { SceneList } from './components/SceneList'
 import { Player } from './components/Player'
-import { Inspector } from './components/Inspector'
+import { RightPane } from './components/RightPane'
+import { Transport } from './components/Transport'
 import { CommandBar } from './components/CommandBar'
+import { useStudio } from './store'
 import s from './App.module.css'
 
 export function App() {
+  const chrome = useStudio((x) => x.chrome)
+  const clean = useStudio((x) => x.cleanPreview)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', chrome)
+  }, [chrome])
+
+  if (clean) {
+    return (
+      <div className={s.clean}>
+        <Player />
+      </div>
+    )
+  }
+
   return (
     <div className={s.app}>
-      <Toolbar />
+      <TopBar />
       <PanelGroup direction="horizontal" className={s.body}>
-        <Panel defaultSize={20} minSize={14}>
-          <SceneTree />
+        <Panel defaultSize={17} minSize={12} maxSize={26}>
+          <SceneList />
         </Panel>
         <PanelResizeHandle className={s.handle} />
-        <Panel defaultSize={52} minSize={30}>
+        <Panel defaultSize={60} minSize={30}>
           <Player />
         </Panel>
         <PanelResizeHandle className={s.handle} />
-        <Panel defaultSize={28} minSize={20}>
-          <Inspector />
+        <Panel defaultSize={23} minSize={16} maxSize={34}>
+          <RightPane />
         </Panel>
       </PanelGroup>
+      <Transport />
       <CommandBar />
     </div>
   )

@@ -14,6 +14,8 @@ Usage
   emaki schema [--out <file>]             print the deck JSON Schema (wire Monaco to it)
   emaki init [--out <file>] [--force]     scaffold a starter deck.json
   emaki render <deck.json> [--aspect <16:9|1:1|9:16>] [--out <file.mp4>]
+  emaki extract [rollup] <stats.json> [--out <deck.json>] [--aspect] [--theme]
+  emaki mcp serve                         start the MCP server (add to Claude Code)
 
 Every command accepts --json for machine-readable output.
 `
@@ -170,6 +172,53 @@ async function cmdRender(args: string[]): Promise<void> {
   )
 }
 
+async function cmdExtract(args: string[]): Promise<void> {
+  const { positionals, values } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      out: { type: 'string' },
+      type: { type: 'string', default: 'rollup' },
+      aspect: { type: 'string' },
+      theme: { type: 'string' },
+    },
+  })
+  // support both `emaki extract rollup stats.json` and `emaki extract stats.json`
+  const source = positionals[0] === 'rollup' ? positionals[1] : positionals[0]
+  if (!source) fail('✗ usage: emaki extract [rollup] <stats.json> [--out deck.json]')
+
+  const { extractRollup } = await import('@emaki/extract')
+  let raw: unknown
+  try {
+    raw = JSON.parse(readFileSync(resolve(process.cwd(), source), 'utf8'))
+  } catch (e) {
+    return fail(`✗ could not read ${source}: ${(e as Error).message}`)
+  }
+  let deck
+  try {
+    deck = extractRollup(raw, {
+      aspect: values.aspect as '16:9' | '1:1' | '9:16' | undefined,
+      theme: values.theme,
+    })
+  } catch (e) {
+    return fail(`✗ ${(e as Error).message}`)
+  }
+  const json = JSON.stringify(deck, null, 2)
+  if (values.out) {
+    writeFileSync(resolve(process.cwd(), values.out), json + '\n')
+    process.stdout.write(`✓ ${deck.scenes.length}-scene deck → ${values.out}\n`)
+  } else {
+    process.stdout.write(json + '\n')
+  }
+}
+
+async function cmdMcp(args: string[]): Promise<void> {
+  if (args[0] !== 'serve') fail('✗ usage: emaki mcp serve')
+  // stdout is the MCP protocol channel from here — print nothing else.
+  const { runStdio } = await import('@emaki/mcp')
+  await runStdio()
+}
+
 function main(argv: string[]): void {
   const [cmd, ...rest] = argv
   switch (cmd) {
@@ -183,6 +232,12 @@ function main(argv: string[]): void {
       return cmdInit(rest)
     case 'render':
       cmdRender(rest).catch((e: unknown) => fail(`✗ render failed: ${(e as Error).message}`))
+      return
+    case 'extract':
+      cmdExtract(rest).catch((e: unknown) => fail(`✗ extract failed: ${(e as Error).message}`))
+      return
+    case 'mcp':
+      cmdMcp(rest).catch((e: unknown) => fail(`✗ mcp failed: ${(e as Error).message}`))
       return
     case '-v':
     case '--version':

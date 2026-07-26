@@ -1,6 +1,6 @@
 {
   "name": "@emaki/schema",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "The Emaki deck schema — one Zod definition feeding types, runtime validation, and JSON Schema.",
   "type": "module",
   "main": "./dist/index.js",

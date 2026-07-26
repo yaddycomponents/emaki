@@ -132,6 +132,73 @@ function withAlpha(color: string, a: number): string {
 const shimmer = (t: UiTheme, lite: boolean): string =>
   withAlpha(t.colors.text, lite ? 0.05 : 0.1);
 
+// The icon allowlist, drawn as stroke primitives on a 24×24 grid (Feather-style).
+// Keys must match schema's ICON_NAMES. `f` marks elements that fill instead of stroke.
+type IconEl = [string, Record<string, number | string>, boolean?];
+const ICONS: Record<string, IconEl[]> = {
+  search: [["circle", { cx: 11, cy: 11, r: 7 }], ["line", { x1: 21, y1: 21, x2: 16.5, y2: 16.5 }]],
+  plus: [["line", { x1: 12, y1: 5, x2: 12, y2: 19 }], ["line", { x1: 5, y1: 12, x2: 19, y2: 12 }]],
+  minus: [["line", { x1: 5, y1: 12, x2: 19, y2: 12 }]],
+  check: [["polyline", { points: "20 6 9 17 4 12" }]],
+  x: [["line", { x1: 6, y1: 6, x2: 18, y2: 18 }], ["line", { x1: 18, y1: 6, x2: 6, y2: 18 }]],
+  "chevron-right": [["polyline", { points: "9 6 15 12 9 18" }]],
+  "chevron-down": [["polyline", { points: "6 9 12 15 18 9" }]],
+  "chevron-left": [["polyline", { points: "15 6 9 12 15 18" }]],
+  "arrow-right": [["line", { x1: 4, y1: 12, x2: 20, y2: 12 }], ["polyline", { points: "13 5 20 12 13 19" }]],
+  mail: [["rect", { x: 2, y: 4, width: 20, height: 16, rx: 2 }], ["polyline", { points: "2 6 12 13 22 6" }]],
+  calendar: [
+    ["rect", { x: 3, y: 4, width: 18, height: 18, rx: 2 }],
+    ["line", { x1: 16, y1: 2, x2: 16, y2: 6 }],
+    ["line", { x1: 8, y1: 2, x2: 8, y2: 6 }],
+    ["line", { x1: 3, y1: 10, x2: 21, y2: 10 }],
+  ],
+  clock: [["circle", { cx: 12, cy: 12, r: 9 }], ["polyline", { points: "12 7 12 12 15 14" }]],
+  bell: [
+    ["path", { d: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" }],
+    ["path", { d: "M13.7 21a2 2 0 0 1-3.4 0" }],
+  ],
+  star: [["polygon", { points: "12 2 15 9 22 9.3 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.3 9 9" }]],
+  user: [["path", { d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" }], ["circle", { cx: 12, cy: 7, r: 4 }]],
+  filter: [["polygon", { points: "22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" }]],
+  settings: [["circle", { cx: 12, cy: 12, r: 3 }], ["path", { d: "M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" }]],
+  "more-horizontal": [
+    ["circle", { cx: 5, cy: 12, r: 1.4 }, true],
+    ["circle", { cx: 12, cy: 12, r: 1.4 }, true],
+    ["circle", { cx: 19, cy: 12, r: 1.4 }, true],
+  ],
+};
+
+/** Render an allowlisted icon at the given colour. Falls back to a small dot. */
+function renderIcon(name: string, color: string, size = 16): ReactNode {
+  const els = ICONS[name];
+  if (!els) {
+    return createElement("div", {
+      style: { width: size, height: size, borderRadius: "50%", background: color, flexShrink: 0 } as CSSProperties,
+    });
+  }
+  return createElement(
+    "svg",
+    {
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: color,
+      strokeWidth: 2,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      style: { flexShrink: 0, display: "block" } as CSSProperties,
+    },
+    els.map(([tag, props, fill], i) =>
+      createElement(tag, {
+        key: i,
+        ...props,
+        ...(fill ? { fill: color, stroke: "none" } : {}),
+      }),
+    ),
+  );
+}
+
 interface Ctx {
   t: UiTheme;
   /** True once the scene is past its first (skeleton) state — content is "loaded". */
@@ -143,7 +210,8 @@ function badge(
   t: UiTheme,
 ): ReactNode {
   const tone = node.tone;
-  const color = tone === "ai" ? t.colors.accent : textColor(t, tone);
+  const color =
+    node.color ?? (tone === "ai" ? t.colors.accent : textColor(t, tone));
   return createElement(
     "span",
     {
@@ -214,7 +282,11 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
       );
     case "badge":
       return badge(node, t);
-    case "dot":
+    case "dot": {
+      // A small solid dot (no initials) reads as a coloured status marker; a
+      // larger one with initials reads as an avatar.
+      const accent = node.color ?? t.colors.accent;
+      const solid = !node.initials && node.size <= 16;
       return createElement(
         "div",
         {
@@ -222,8 +294,8 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
             width: node.size,
             height: node.size,
             borderRadius: "50%",
-            background: withAlpha(t.colors.accent, 0.16),
-            color: t.colors.accent,
+            background: solid ? accent : withAlpha(accent, 0.16),
+            color: accent,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -235,16 +307,9 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
         },
         node.initials ?? null,
       );
+    }
     case "icon":
-      return createElement("div", {
-        style: {
-          width: 16,
-          height: 16,
-          borderRadius: 4,
-          background: withAlpha(textColor(t, node.tone), 0.9),
-          flexShrink: 0,
-        } as CSSProperties,
-      });
+      return renderIcon(node.name, node.color ?? textColor(t, node.tone));
     case "toggle":
       return createElement(
         "div",
@@ -372,17 +437,34 @@ function listRow(
           background: shimmer(t, false),
         } as CSSProperties,
       });
-  const sub = node.sub
-    ? createElement("div", {
-        key: "s",
-        style: {
-          width: len(node.sub),
-          height: 7,
-          borderRadius: 5,
-          background: shimmer(t, true),
-        } as CSSProperties,
-      })
-    : null;
+  const sub = node.subText
+    ? createElement(
+        "div",
+        {
+          key: "s",
+          style: {
+            fontFamily: t.fonts.body,
+            fontSize: 12,
+            color: t.colors.muted,
+            lineHeight: 1.3,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          } as CSSProperties,
+        },
+        node.subText,
+      )
+    : node.sub
+      ? createElement("div", {
+          key: "s",
+          style: {
+            width: len(node.sub),
+            height: 7,
+            borderRadius: 5,
+            background: shimmer(t, true),
+          } as CSSProperties,
+        })
+      : null;
   return createElement(
     "div",
     {

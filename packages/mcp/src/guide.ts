@@ -47,9 +47,20 @@ live vocabulary. In brief:
 - **Leaves**: \`bar\` (a shimmer bar; add \`text\` and it becomes real text once
   loaded), \`text\`, \`badge\`, \`dot\`, \`icon\`, \`toggle\`, \`count\`, \`divider\`,
   \`field\`, \`listRow\`.
-- **states**: \`[{ id, hold }]\`, e.g. skeleton → loaded. A node with
+- **states**: \`[{ id, hold }]\`, e.g. skeleton -> loaded. A node with
   \`in: ["loaded"]\` only appears in those states.
 - **Timing is derived** from the tree — never set per-node delays.
+- **icons**: \`icon\` names come from an allowlist — call \`list_icons\`. An
+  unknown name fails validation.
+- **colour**: \`dot\`, \`badge\`, and \`icon\` accept a \`color\` (hex) that overrides
+  the tone — e.g. five differently-coloured label dots.
+- **real list text**: \`listRow.subText\` is a real subtitle (subject/preview/
+  company); \`sub\` alone is just a shimmer bar.
+
+## Text safety
+Prefer plain ASCII punctuation. The default fonts don't cover decorative glyphs
+(＋ ✦ → fullwidth/dingbats/arrows) — they render as blank boxes. \`validate_deck\`
+and \`build_deck\` warn when a deck contains them; heed the warning.
 
 ### Example — a screenshot of an inbox becomes a ui-scene
 \`\`\`json

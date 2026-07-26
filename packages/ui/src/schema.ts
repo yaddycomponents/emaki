@@ -42,6 +42,8 @@ export const Badge = z.object({
   kind: z.literal('badge'),
   label: z.string().min(1),
   tone: z.enum(['ai', 'good', 'danger', 'muted']).default('ai'),
+  /** Arbitrary accent (hex) — overrides `tone`. e.g. a coloured label chip. */
+  color: z.string().optional(),
 })
 
 export const Dot = z.object({
@@ -49,13 +51,39 @@ export const Dot = z.object({
   kind: z.literal('dot'),
   size: z.number().default(34),
   initials: z.string().max(2).optional(),
+  /** Arbitrary colour (hex) — overrides the accent. e.g. per-label status dots. */
+  color: z.string().optional(),
 })
+
+/** The icon allowlist — resolved to a drawn glyph by the renderer. `list_icons` returns these. */
+export const ICON_NAMES = [
+  'search',
+  'plus',
+  'minus',
+  'check',
+  'x',
+  'chevron-right',
+  'chevron-down',
+  'chevron-left',
+  'arrow-right',
+  'mail',
+  'calendar',
+  'clock',
+  'bell',
+  'star',
+  'user',
+  'filter',
+  'settings',
+  'more-horizontal',
+] as const
 
 export const Icon = z.object({
   ...base,
   kind: z.literal('icon'),
-  name: z.string().meta({ description: 'Resolved against the icon allowlist, not raw lucide.' }),
+  name: z.enum(ICON_NAMES).meta({ description: 'One of the icon allowlist — see list_icons.' }),
   tone: z.enum(['ink', 'muted', 'primary', 'good', 'danger']).default('muted'),
+  /** Arbitrary colour (hex) — overrides `tone`. */
+  color: z.string().optional(),
 })
 
 export const Toggle = z.object({ ...base, kind: z.literal('toggle'), on: z.boolean().default(true) })
@@ -83,6 +111,8 @@ export const ListRow = z.object({
   kind: z.literal('listRow'),
   titleText: z.string().optional(),
   title: Size.optional(),
+  /** Real subtitle text (subject/preview/company). Falls back to `sub` shimmer if absent. */
+  subText: z.string().optional(),
   sub: Size.optional(),
   badge: z.string().optional(),
   active: z.boolean().default(false),

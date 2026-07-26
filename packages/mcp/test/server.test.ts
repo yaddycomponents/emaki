@@ -95,6 +95,39 @@ describe("emaki mcp server", () => {
     expect(theme.colors.surface).toMatch(/^#/);
   });
 
+  it("accepts object params sent as JSON strings (MCP client quirk)", async () => {
+    const client = await connect();
+    // theme_import with the brand serialized to a string
+    const t = await client.callTool({
+      name: "theme_import",
+      arguments: { brand: JSON.stringify({ name: "StrCo", accent: "#123456" }) },
+    });
+    expect(JSON.parse(textOf(t)).id).toBe("strco");
+    // build_deck with the handover serialized to a string
+    const b = await client.callTool({
+      name: "build_deck",
+      arguments: { handover: JSON.stringify({ scenes: [{ type: "title", text: "Hi." }] }) },
+    });
+    expect(JSON.parse(textOf(b)).scenes).toHaveLength(1);
+  });
+
+  it("warns about tofu glyphs on build_deck", async () => {
+    const client = await connect();
+    const res = await client.callTool({
+      name: "build_deck",
+      arguments: { handover: { scenes: [{ type: "title", text: "Compose ＋ reply →" }] } },
+    });
+    expect(textOf(res)).toMatch(/glyph/i);
+  });
+
+  it("list_icons returns the allowlist", async () => {
+    const client = await connect();
+    const res = await client.callTool({ name: "list_icons", arguments: {} });
+    const t = textOf(res);
+    expect(t).toMatch(/search/);
+    expect(t).toMatch(/chevron-right/);
+  });
+
   it("theme_import rejects a brand with no accent", async () => {
     const client = await connect();
     const res = await client.callTool({

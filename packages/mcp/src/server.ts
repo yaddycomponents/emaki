@@ -7,11 +7,12 @@ import {
   createRegistry,
   type Deck,
   deckJsonSchema,
+  glyphWarning,
   parseDeck,
   SceneOp,
 } from "@emaki/schema";
 import { type BrandInput, buildTheme, THEMES } from "@emaki/themes";
-import { CONTAINER_KINDS, LEAF_KINDS } from "@emaki/ui";
+import { CONTAINER_KINDS, ICON_NAMES, LEAF_KINDS } from "@emaki/ui";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -33,6 +34,21 @@ function text(s: string, isError = false) {
     content: [{ type: "text" as const, text: s }],
     ...(isError ? { isError: true } : {}),
   };
+}
+
+/**
+ * Several MCP clients serialize free-form object/array params to a JSON string.
+ * Accept both: parse a string that looks like JSON, otherwise pass through.
+ */
+function coerceJson(x: unknown): unknown {
+  if (typeof x !== "string") return x;
+  const s = x.trim();
+  if (!s || !/^[[{]/.test(s)) return x;
+  try {
+    return JSON.parse(s);
+  } catch {
+    return x;
+  }
 }
 
 function readDeck(
@@ -122,8 +138,12 @@ function uiNodeReference(): string {
     "Leaves:",
     leaves,
     "",
-    "states: [{ id, hold }] (e.g. skeleton → loaded). `in:[state]` limits a node to those states.",
+    "states: [{ id, hold }] (e.g. skeleton -> loaded). `in:[state]` limits a node to those states.",
     "Reveal timing is derived from the tree — do not set per-node delays.",
+    "",
+    `icon names (allowlist): ${ICON_NAMES.join(", ")}.`,
+    "dot/badge/icon accept a `color` (hex) that overrides the tone — e.g. coloured status dots.",
+    "listRow: `subText` gives a real subtitle (subject/preview/company); `sub` alone is shimmer.",
   ].join("\n");
 }
 
@@ -148,10 +168,12 @@ export function createServer(): McpServer {
       inputSchema: { deck: z.unknown() },
     },
     async ({ deck }) => {
-      const r = parseDeck(deck);
-      return r.ok
-        ? text(`✓ valid · ${r.deck.scenes.length} scenes · ${r.deck.aspect}`)
-        : text(`✗ invalid:\n${r.message}`, true);
+      const r = parseDeck(coerceJson(deck));
+      if (!r.ok) return text(`✗ invalid:\n${r.message}`, true);
+      const warn = glyphWarning(r.deck);
+      return text(
+        `✓ valid · ${r.deck.scenes.length} scenes · ${r.deck.aspect}${warn ? `\n${warn}` : ""}`,
+      );
     },
   );
 
@@ -211,6 +233,16 @@ export function createServer(): McpServer {
   );
 
   server.registerTool(
+    "list_icons",
+    {
+      description:
+        "List the icon names an `icon` node may use (the allowlist). Any other name fails validation.",
+      inputSchema: {},
+    },
+    async () => text(ICON_NAMES.map((n) => `- ${n}`).join("\n")),
+  );
+
+  server.registerTool(
     "theme_import",
     {
       description:
@@ -227,7 +259,7 @@ export function createServer(): McpServer {
     async ({ brand, out }) => {
       let theme;
       try {
-        theme = buildTheme(brand as BrandInput);
+        theme = buildTheme(coerceJson(brand) as BrandInput);
       } catch (e) {
         return text(`✗ ${(e as Error).message}`, true);
       }
@@ -255,7 +287,8 @@ export function createServer(): McpServer {
           .describe("e.g. a rollup stats object — supplies real numbers"),
       },
     },
-    async ({ grounding }) => {
+    async ({ grounding: rawGrounding }) => {
+      const grounding = coerceJson(rawGrounding);
       if (grounding && typeof grounding === "object") {
         try {
           const deck = extractRollup(grounding);
@@ -304,7 +337,7 @@ export function createServer(): McpServer {
       },
     },
     async ({ handover, aspect, theme, out }) => {
-      const r = extractHandover(handover, { aspect, theme });
+      const r = extractHandover(coerceJson(handover), { aspect, theme });
       if (!r.ok) {
         const detail = r.issues.length
           ? r.issues
@@ -316,14 +349,17 @@ export function createServer(): McpServer {
           : r.message;
         return text(`✗ handover did not validate:\n${detail}`, true);
       }
-      const notes = r.notes.length ? ` · ${r.notes.join(" ")}` : "";
+      const warn = glyphWarning(r.deck);
+      const notes =
+        (r.notes.length ? ` · ${r.notes.join(" ")}` : "") +
+        (warn ? `\n${warn}` : "");
       if (out) {
         writeFileSync(resolve(out), JSON.stringify(r.deck, null, 2) + "\n");
         return text(
           `✓ built ${r.deck.scenes.length}-scene deck → ${out}${notes}`,
         );
       }
-      return text(JSON.stringify(r.deck, null, 2));
+      return text(JSON.stringify(r.deck, null, 2) + (warn ? `\n${warn}` : ""));
     },
   );
 
@@ -332,12 +368,18 @@ export function createServer(): McpServer {
     {
       description:
         "Apply scene ops to a deck file on disk and write it back. Studio hot-reloads.",
-      inputSchema: { deckPath: z.string(), ops: z.array(SceneOp) },
+      inputSchema: {
+        deckPath: z.string(),
+        ops: z.union([z.string(), z.array(SceneOp)]),
+      },
     },
     async ({ deckPath, ops }) => {
       const read = readDeck(deckPath);
       if (!read.ok) return text(`✗ ${read.message}`, true);
-      const result = applyOps(read.deck, ops);
+      const parsedOps = z.array(SceneOp).safeParse(coerceJson(ops));
+      if (!parsedOps.success)
+        return text(`✗ invalid ops:\n${z.prettifyError(parsedOps.error)}`, true);
+      const result = applyOps(read.deck, parsedOps.data);
       if (!result.ok)
         return text(
           `✗ ops would produce an invalid deck:\n${result.error}`,

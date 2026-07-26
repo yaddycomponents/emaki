@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
-import { parseDeck, deckDuration, deckJsonSchema } from '@emaki/schema'
+import { parseDeck, deckDuration, deckJsonSchema, glyphWarning } from '@emaki/schema'
 
 const VERSION = '0.1.0'
 
@@ -75,14 +75,20 @@ function cmdValidate(args: string[]): void {
 
   const { deck } = result
   const timing = deckDuration(deck)
+  const warn = glyphWarning(deck)
   if (values.json) {
     process.stdout.write(
-      JSON.stringify({ ok: true, aspect: deck.aspect, scenes: deck.scenes.length, duration: timing.total }, null, 2) + '\n',
+      JSON.stringify(
+        { ok: true, aspect: deck.aspect, scenes: deck.scenes.length, duration: timing.total, glyphWarning: warn ?? undefined },
+        null,
+        2,
+      ) + '\n',
     )
   } else {
     process.stdout.write(
       `✓ ${file} is valid · ${deck.scenes.length} scenes · ${deck.aspect} · ${timing.total}s\n`,
     )
+    if (warn) process.stderr.write(`${warn}\n`)
   }
 }
 

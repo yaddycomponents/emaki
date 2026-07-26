@@ -1,6 +1,6 @@
 {
   "name": "@emaki/themes",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "First-party Emaki themes — warm-editorial and saas-product — each satisfying the schema ThemeContract.",
   "type": "module",
   "main": "./dist/index.js",

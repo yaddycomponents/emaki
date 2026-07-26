@@ -11,13 +11,36 @@
   flex: none;
   display: flex;
   align-items: center;
-  padding: 0 var(--s-5);
+  justify-content: space-between;
+  padding: 0 var(--s-4);
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-3);
   border-bottom: var(--bd-soft);
+}
+
+.add {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--t), background var(--t);
+}
+
+.add:hover {
+  color: var(--text);
+  background: var(--raised);
+}
+
+.dragging {
+  opacity: 0.5;
 }
 
 .list {

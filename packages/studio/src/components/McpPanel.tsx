@@ -32,7 +32,11 @@ export function McpPanel({ onClose }: { onClose?: () => void }) {
       <div className={s.label}>Add the server</div>
       <div className={s.cmdRow}>
         <code className={s.cmd}>claude mcp add emaki -- emaki mcp serve</code>
-        <button type="button" className={s.copy}>
+        <button
+          type="button"
+          className={s.copy}
+          onClick={() => navigator.clipboard?.writeText('claude mcp add emaki -- emaki mcp serve').catch(() => {})}
+        >
           copy
         </button>
       </div>

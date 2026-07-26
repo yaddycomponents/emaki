@@ -85,10 +85,10 @@ export function ThemeGallery() {
             </span>
           </div>
         </button>
-        <div className={s.addTile}>
+        <button type="button" className={s.addTile} onClick={() => setView('theme-blank')}>
           <Plus size={18} />
           <span>New theme</span>
-        </div>
+        </button>
       </div>
 
       <footer className={s.footer}>

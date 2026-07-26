@@ -183,6 +183,15 @@
   border-radius: var(--r-lg);
   color: var(--text-3);
   font-size: 12px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color var(--t), color var(--t);
+}
+
+.addTile:hover {
+  border-color: var(--accent-line);
+  color: var(--text-2);
 }
 
 .footer {

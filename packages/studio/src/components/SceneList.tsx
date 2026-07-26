@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { Scene } from '@emaki/schema'
 import { useStudio } from '../store'
@@ -30,6 +31,10 @@ export function SceneList() {
   const select = useStudio((x) => x.select)
   const changes = useStudio((x) => x.changes)
   const dismiss = useStudio((x) => x.dismissChanges)
+  const addScene = useStudio((x) => x.addScene)
+  const moveScene = useStudio((x) => x.moveScene)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [overIndex, setOverIndex] = useState<number | null>(null)
 
   if (!deck) return <div className={s.panel} />
   const secs = sceneSeconds(deck)
@@ -45,7 +50,7 @@ export function SceneList() {
             {changeCount} updated · dismiss
           </button>
         ) : (
-          <button type="button" className={s.add} aria-label="add scene">
+          <button type="button" className={s.add} aria-label="add scene" onClick={addScene}>
             <Plus size={13} />
           </button>
         )}
@@ -56,10 +61,36 @@ export function SceneList() {
           const cls = [s.row]
           if (i === selected) cls.push(s.active)
           if (change?.kind === 'new') cls.push(s.rowNew)
+          if (i === dragIndex) cls.push(s.dragging)
+          if (i === overIndex && dragIndex !== null && i !== dragIndex) cls.push(s.dropTarget)
           return (
-            <button key={scene.id} type="button" className={cls.join(' ')} onClick={() => select(i)}>
+            <button
+              key={scene.id}
+              type="button"
+              className={cls.join(' ')}
+              onClick={() => select(i)}
+              draggable
+              onDragStart={(e) => {
+                setDragIndex(i)
+                e.dataTransfer.effectAllowed = 'move'
+              }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setOverIndex(i)
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (dragIndex !== null) moveScene(dragIndex, i)
+                setDragIndex(null)
+                setOverIndex(null)
+              }}
+              onDragEnd={() => {
+                setDragIndex(null)
+                setOverIndex(null)
+              }}
+            >
               <span className={change?.kind === 'new' ? `${s.index} ${s.indexNew}` : s.index}>
-                {change?.kind === 'new' ? '+' : String(i + 1).padStart(2, '0')}
+                {i === dragIndex ? '⠿' : change?.kind === 'new' ? '+' : String(i + 1).padStart(2, '0')}
               </span>
               <span className={`${s.vdot} ${s.vok}`} />
               <span className={s.meta}>

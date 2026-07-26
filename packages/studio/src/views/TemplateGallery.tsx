@@ -11,14 +11,19 @@ const FILTERS = ['all', '16:9', '9:16'] as const
 export function TemplateGallery() {
   const setView = useStudio((x) => x.setView)
   const openDeck = useStudio((x) => x.openDeck)
+  const log = useStudio((x) => x.log)
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('all')
+  const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(TEMPLATES[0]!.id)
 
-  const shown = TEMPLATES.filter((t) => filter === 'all' || t.aspects.includes(filter))
-  const sel = TEMPLATES.find((t) => t.id === selected)!
+  const shown = TEMPLATES.filter(
+    (t) => (filter === 'all' || t.aspects.includes(filter)) && t.name.toLowerCase().includes(query.toLowerCase()),
+  )
+  const sel = TEMPLATES.find((t) => t.id === selected) ?? TEMPLATES[0]!
   const deckFor = (id: string) => TEMPLATE_DECKS[id] ?? TEMPLATE_DECKS['release-notes']!
 
   const use = () => openDeck(deckFor(selected), `emaki new --template ${selected}`)
+  const addFolder = () => log('emaki template add <path>', 'runs in the terminal', 0)
 
   return (
     <div className={s.screen}>
@@ -36,8 +41,13 @@ export function TemplateGallery() {
             </button>
           ))}
         </div>
-        <input className={s.filter} placeholder="Filter templates" />
-        <button type="button" className={s.addPath}>
+        <input
+          className={s.filter}
+          placeholder="Filter templates"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button type="button" className={s.addPath} onClick={addFolder}>
           Add from path
         </button>
         <ChromeToggle />
@@ -64,10 +74,10 @@ export function TemplateGallery() {
             </div>
           </button>
         ))}
-        <div className={s.addTile}>
+        <button type="button" className={s.addTile} onClick={addFolder}>
           <Plus size={18} />
           <span>Add a template folder</span>
-        </div>
+        </button>
       </div>
 
       <footer className={s.footer}>
@@ -76,7 +86,7 @@ export function TemplateGallery() {
           templates/{sel.name} · {sel.scenes} scenes
         </span>
         <div className={s.spacer} />
-        <button type="button" className={s.ghost}>
+        <button type="button" className={s.ghost} onClick={() => openDeck(deckFor(selected), `emaki preview templates/${selected}`)}>
           Preview
         </button>
         <button type="button" className={s.primary} onClick={use}>

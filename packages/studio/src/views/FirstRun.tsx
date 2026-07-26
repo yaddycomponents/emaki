@@ -74,7 +74,13 @@ export function FirstRun() {
           <div className={s.mcpStrip}>
             <span className={s.mcpText}>Want AI? Connect Emaki to the AI app you already use.</span>
             <code className={s.mcpCmd}>claude mcp add emaki -- emaki mcp serve</code>
-            <button type="button" className={s.copy}>copy</button>
+            <button
+              type="button"
+              className={s.copy}
+              onClick={() => navigator.clipboard?.writeText('claude mcp add emaki -- emaki mcp serve').catch(() => {})}
+            >
+              copy
+            </button>
             <button type="button" className={s.secondary}>
               How MCP works
             </button>
@@ -108,7 +114,12 @@ export function FirstRun() {
             <div>remotion 4.0 · 12 workers</div>
             <div className={s.logOk}>mcp server idle · no client attached</div>
           </div>
-          <div className={s.shortcuts}>⌘K palette · ⌘O open · ⌘N new</div>
+          <div className={s.shortcuts}>
+            ⌘K palette · ⌘O open · ⌘N new ·{' '}
+            <button type="button" className={s.inlineLink} onClick={() => setView('inventory')}>
+              components
+            </button>
+          </div>
         </aside>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { parseDeck, type Aspect, type Deck } from '@emaki/schema'
 import { SAMPLE_DECK, TEMPLATE_DECKS } from './sample'
 
@@ -25,9 +26,10 @@ export interface Change {
 }
 
 export interface RenderState {
-  status: 'idle' | 'running' | 'done' | 'failed'
+  status: 'idle' | 'setup' | 'running' | 'done' | 'failed'
   frame: number
   total: number
+  output: string
   error?: string
 }
 
@@ -61,6 +63,9 @@ interface StudioState {
   openDeck: (deck: Deck, command: string) => void
   setText: (text: string) => void
   select: (index: number) => void
+  addScene: () => void
+  removeScene: (index: number) => void
+  moveScene: (from: number, to: number) => void
   setAspect: (aspect: Aspect) => void
   togglePlay: () => void
   setPlaying: (playing: boolean) => void
@@ -70,6 +75,8 @@ interface StudioState {
   log: (command: string, result?: string, ms?: number) => void
 
   startRender: () => void
+  setRenderOutput: (output: string) => void
+  beginRender: () => void
   setRenderFrame: (frame: number) => void
   finishRender: () => void
   cancelRender: () => void
@@ -107,7 +114,9 @@ function initialView(): View {
   return 'first-run'
 }
 
-export const useStudio = create<StudioState>((set, get) => ({
+export const useStudio = create<StudioState>()(
+  persist(
+    (set, get) => ({
   view: initialView(),
   text: initialText,
   deck: initial.deck,
@@ -120,7 +129,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   chrome: 'light',
 
   commandLog: [{ command: 'emaki studio', result: 'ready', ms: 8 }],
-  render: { status: 'idle', frame: 0, total: 0 },
+  render: { status: 'idle', frame: 0, total: 0, output: 'out/film.mp4' },
   mcp: { connected: false, clientName: 'claude-code' },
   changes: {},
   reloadedAt: null,
@@ -152,6 +161,40 @@ export const useStudio = create<StudioState>((set, get) => ({
 
   select: (index) => set({ selected: index, playing: false }),
 
+  addScene: () => {
+    const { deck, selected } = get()
+    if (!deck) return
+    const next = structuredClone(deck)
+    const at = Math.min(selected + 1, next.scenes.length)
+    const id = `scene-${now().toString(36)}`
+    next.scenes.splice(at, 0, { id, type: 'statement', props: { text: 'New scene.' } })
+    get().setText(JSON.stringify(next, null, 2))
+    set({ selected: at })
+    get().log('add scene · statement', 'ok', 2)
+  },
+
+  removeScene: (index) => {
+    const { deck } = get()
+    if (!deck || deck.scenes.length <= 1) return
+    const next = structuredClone(deck)
+    next.scenes.splice(index, 1)
+    get().setText(JSON.stringify(next, null, 2))
+    set((s) => ({ selected: Math.max(0, Math.min(s.selected, next.scenes.length - 1)) }))
+    get().log('remove scene', 'ok', 2)
+  },
+
+  moveScene: (from, to) => {
+    const { deck } = get()
+    if (!deck || from === to || from < 0 || to < 0 || to >= deck.scenes.length) return
+    const next = structuredClone(deck)
+    const [moved] = next.scenes.splice(from, 1)
+    if (!moved) return
+    next.scenes.splice(to, 0, moved)
+    get().setText(JSON.stringify(next, null, 2))
+    set({ selected: to })
+    get().log('reorder scenes', 'ok', 2)
+  },
+
   setAspect: (aspect) => {
     const { deck } = get()
     if (!deck) return
@@ -169,10 +212,11 @@ export const useStudio = create<StudioState>((set, get) => ({
     set((s) => ({ commandLog: [...s.commandLog, { command, result, ms }].slice(-30) })),
 
   startRender: () => {
-    const { deck, error } = get()
+    const { deck, error, render } = get()
     if (error || !deck) {
       set({
         render: {
+          ...render,
           status: 'failed',
           frame: 214,
           total: 555,
@@ -183,17 +227,23 @@ export const useStudio = create<StudioState>((set, get) => ({
       get().log(`emaki render deck.json --aspect ${deck?.aspect ?? '9:16'}`, 'failed', 0)
       return
     }
-    // total frames computed by the dialog; seed with a placeholder
-    set({ render: { status: 'running', frame: 0, total: 0 } })
-    get().log(`emaki render deck.json --aspect ${deck.aspect}`, 'running', 2)
+    // ask for the output path before running
+    set({ render: { ...render, status: 'setup', frame: 0, total: 0, error: undefined } })
+  },
+  setRenderOutput: (output) => set((s) => ({ render: { ...s.render, output } })),
+  beginRender: () => {
+    const { deck, render } = get()
+    if (!deck) return
+    set({ render: { ...render, status: 'running', frame: 0, total: 0 } })
+    get().log(`emaki render deck.json --aspect ${deck.aspect} --out ${render.output}`, 'running', 2)
   },
   setRenderFrame: (frame) => set((s) => ({ render: { ...s.render, frame } })),
   finishRender: () =>
     set((s) => {
-      get().log(`emaki render deck.json`, `done · ${s.render.total}f`, 0)
+      get().log(`emaki render deck.json --out ${s.render.output}`, `done · ${s.render.total}f`, 0)
       return { render: { ...s.render, status: 'done' } }
     }),
-  cancelRender: () => set({ render: { status: 'idle', frame: 0, total: 0 } }),
+  cancelRender: () => set((s) => ({ render: { ...s.render, status: 'idle', frame: 0, total: 0, error: undefined } })),
 
   connectMcp: () =>
     set({ mcp: { connected: true, clientName: 'claude-code', lastCall: undefined } }),
@@ -235,6 +285,21 @@ export const useStudio = create<StudioState>((set, get) => ({
     get().log('deck.json changed on disk · reloaded', 'ok', 31)
   },
   dismissChanges: () => set({ changes: {}, reloadedAt: null }),
-}))
+    }),
+    {
+      name: 'emaki-studio',
+      // Persist only the durable bits; transient UI (playing, render, changes) resets.
+      partialize: (s) => ({ text: s.text, chrome: s.chrome, selected: s.selected, view: s.view }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        const { deck, error } = parse(state.text)
+        state.deck = deck
+        state.error = error
+        // never rehydrate straight into full-screen preview
+        state.cleanPreview = false
+      },
+    },
+  ),
+)
 
 export { TEMPLATE_DECKS }

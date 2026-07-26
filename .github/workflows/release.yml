@@ -1,0 +1,29 @@
+name: Release
+
+# Manual trigger: Actions tab → Release → Run workflow → pick a dist-tag.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'npm dist-tag (beta | latest)'
+        required: true
+        default: 'beta'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Publishes every non-private @emaki/* package in dependency order,
+      # rewriting workspace:* → the real version. @emaki/studio stays private.
+      - run: pnpm -r publish --access public --tag ${{ inputs.tag }} --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

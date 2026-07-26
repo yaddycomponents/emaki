@@ -1,6 +1,6 @@
 {
   "name": "@emaki/core",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "description": "The Emaki engine — design tokens, motion presets, and the timeline bridge shared by the Framer (preview) and Remotion (render) adapters.",
   "type": "module",
   "main": "./dist/index.js",

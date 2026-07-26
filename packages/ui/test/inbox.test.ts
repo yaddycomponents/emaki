@@ -62,6 +62,19 @@ const INBOX = {
   },
 }
 
+describe('ui scene — image leaf (logo/screenshot)', () => {
+  it('parses an image node with a local path and defaults', () => {
+    const p = uiSceneProps.parse({
+      root: { kind: 'col', children: [{ kind: 'image', src: 'assets/logo.svg', w: 40, h: 40 }] },
+    })
+    const img = (p.root.children[0] as { kind: string; src: string; fit: string; radius: number })
+    expect(img.kind).toBe('image')
+    expect(img.src).toBe('assets/logo.svg')
+    expect(img.fit).toBe('contain')
+    expect(img.radius).toBe(0)
+  })
+})
+
 describe('ui scene — InboxScene as data (the gate)', () => {
   const parsed = uiSceneProps.parse(INBOX)
 

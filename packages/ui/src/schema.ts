@@ -98,6 +98,23 @@ export const Count = z.object({
 
 export const Divider = z.object({ ...base, kind: z.literal('divider') })
 
+export const Image = z.object({
+  ...base,
+  kind: z.literal('image'),
+  src: z
+    .string()
+    .min(1)
+    .meta({
+      description:
+        'A local path (resolved relative to the deck file and inlined at render), a data: URI, or an https URL. Use for a real logo or screenshot.',
+    }),
+  w: Size.optional(),
+  h: Size.optional(),
+  fit: z.enum(['cover', 'contain']).default('contain'),
+  radius: z.number().default(0),
+  alt: z.string().optional(),
+})
+
 // composites — the two patterns v1 repeated most
 export const Field = z.object({
   ...base,
@@ -128,6 +145,7 @@ export const Leaf = z.discriminatedUnion('kind', [
   Toggle,
   Count,
   Divider,
+  Image,
   Field,
   ListRow,
 ])
@@ -143,6 +161,7 @@ export const LEAF_KINDS = [
   'toggle',
   'count',
   'divider',
+  'image',
   'field',
   'listRow',
 ] as const

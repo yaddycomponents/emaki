@@ -1,6 +1,6 @@
 {
   "name": "@emaki/ui",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "description": "UI scenes as data — a constrained mock language (panes, rows, bars, badges) with derived sequencing, plus the node→React renderer.",
   "type": "module",
   "main": "./dist/index.js",

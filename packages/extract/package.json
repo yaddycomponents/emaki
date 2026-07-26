@@ -1,6 +1,6 @@
 {
   "name": "@emaki/extract",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "description": "Turn build output (rollup stats, git log) into a partial Emaki deck.",
   "type": "module",
   "main": "./dist/index.js",

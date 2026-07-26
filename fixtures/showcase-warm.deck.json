@@ -16,7 +16,7 @@
       "states": [{ "id": "loaded", "hold": 3 }],
       "root": { "kind": "card", "w": 640, "pad": 22, "gap": 16, "children": [
         { "kind": "row", "gap": 12, "children": [
-          { "kind": "dot", "initials": "e" },
+          { "kind": "image", "src": "assets/logo.svg", "w": 34, "h": 34, "radius": 9 },
           { "kind": "col", "gap": 6, "children": [ { "kind": "text", "value": "new-bundle", "weight": "bold" }, { "kind": "text", "value": "main · ready to ship", "tone": "muted", "size": "label" } ] },
           { "kind": "toggle", "on": true }
         ] },

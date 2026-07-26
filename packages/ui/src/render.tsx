@@ -47,6 +47,7 @@ const PRESET_FOR: Record<LeafNode["kind"], PresetName> = {
   toggle: "fadeUp",
   count: "fadeUp",
   divider: "fadeIn",
+  image: "fadeIn",
   field: "fadeUp",
   listRow: "fadeUp",
 };
@@ -310,6 +311,20 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
     }
     case "icon":
       return renderIcon(node.name, node.color ?? textColor(t, node.tone));
+    case "image":
+      return createElement("img", {
+        src: node.src,
+        alt: node.alt ?? "",
+        style: {
+          width: node.w !== undefined ? len(node.w) : undefined,
+          height: node.h !== undefined ? len(node.h) : undefined,
+          maxWidth: "100%",
+          objectFit: node.fit,
+          borderRadius: node.radius || undefined,
+          display: "block",
+          flexShrink: 0,
+        } as CSSProperties,
+      });
     case "toggle":
       return createElement(
         "div",

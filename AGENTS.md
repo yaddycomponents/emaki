@@ -51,6 +51,10 @@ live vocabulary. In brief:
   the tone — e.g. five differently-coloured label dots.
 - **real list text**: `listRow.subText` is a real subtitle (subject/preview/
   company); `sub` alone is just a shimmer bar.
+- **real imagery**: the `image` leaf embeds a logo or screenshot —
+  `{ kind:"image", src, w?, h?, fit?, radius? }`. `src` is a local path
+  (resolved relative to the deck and inlined at render), a data: URI, or an
+  https URL. This is how a mock actually looks like the product.
 
 ## Text safety
 Prefer plain ASCII punctuation. The default fonts don't cover decorative glyphs

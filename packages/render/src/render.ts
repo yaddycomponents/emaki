@@ -52,13 +52,52 @@ function resolveEntry(): string {
   return found
 }
 
+const MIME: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+}
+
+/**
+ * Inline local `image` node sources as data URIs, resolved relative to the deck.
+ * The Remotion bundle has no `public/` dir, so a bare file path wouldn't load;
+ * data: and http(s): sources pass through untouched. A missing file is left as-is
+ * (renders blank) with a warning, never fatal.
+ */
+function inlineImages(deck: Deck, baseDir: string): Deck {
+  const clone = JSON.parse(JSON.stringify(deck)) as Deck
+  const walk = (v: unknown): void => {
+    if (Array.isArray(v)) {
+      v.forEach(walk)
+    } else if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>
+      if (o.kind === 'image' && typeof o.src === 'string' && !/^(data:|https?:)/.test(o.src)) {
+        const file = resolve(baseDir, o.src)
+        if (existsSync(file)) {
+          const ext = file.slice(file.lastIndexOf('.')).toLowerCase()
+          const b64 = readFileSync(file).toString('base64')
+          o.src = `data:${MIME[ext] ?? 'image/png'};base64,${b64}`
+        } else {
+          process.stderr.write(`⚠ image not found, left blank: ${o.src}\n`)
+        }
+      }
+      Object.values(o).forEach(walk)
+    }
+  }
+  walk(clone.scenes)
+  return clone
+}
+
 /** Read + validate a deck file, applying an optional aspect override. */
 function loadDeck(deckPath: string, aspect?: Aspect): Deck {
   const raw = JSON.parse(readFileSync(resolve(deckPath), 'utf8')) as Record<string, unknown>
   if (aspect) raw.aspect = aspect
   const parsed = parseDeck(raw)
   if (!parsed.ok) throw new Error(`Invalid deck:\n${parsed.message}`)
-  return parsed.deck
+  return inlineImages(parsed.deck, dirname(resolve(deckPath)))
 }
 
 /** Bundle once and select the deck composition for a given deck. */

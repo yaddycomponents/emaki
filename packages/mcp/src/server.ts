@@ -117,6 +117,7 @@ const UI_NODE_DOCS: Record<string, string> = {
   toggle: "switch (on)",
   count: "number, optionally counted up (to, prefix, suffix)",
   divider: "hairline rule",
+  image: "a real logo/screenshot (src: local path, data: URI, or https; w, h, fit, radius)",
   field: "label + value pair",
   listRow:
     "avatar + title/sub rows + optional badge (title, sub, badge, active)",

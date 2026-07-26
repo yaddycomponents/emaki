@@ -1,6 +1,6 @@
 {
   "name": "@emaki/schema",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.0",
   "description": "The Emaki deck schema — one Zod definition feeding types, runtime validation, and JSON Schema.",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,7 +12,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run",
@@ -26,5 +28,14 @@
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yaddycomponents/emaki.git",
+    "directory": "packages/schema"
+  },
+  "license": "MIT"
 }

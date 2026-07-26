@@ -178,6 +178,9 @@ function uiNodeReference(): string {
     "",
     "scene props: `chrome` = app (top bar + nav rail) | window (title bar) | none; `title` names it.",
     "`transition` = crossfade (skeleton→text dissolves) | cut; `transitionMs` sets the crossfade length.",
+    "MOTION LAYER:",
+    "  · a STATE can carry `focus:{scale,x,y,dim}` — an eased camera push-in/pan (x/y are % pan; dim 0-1 darkens the surround).",
+    "  · a NODE can carry `enter`/`exit` (a preset or inline anim) — how it slides in/out when it enters/leaves a state (default: crossfade).",
   ].join("\n");
 }
 

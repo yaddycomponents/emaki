@@ -1,6 +1,7 @@
 import * as z from 'zod'
 import {
   Align,
+  Anim,
   Badge,
   Bar,
   Button,
@@ -58,6 +59,8 @@ const ContainerScalar = z.object({
   kind: z.enum(CONTAINER_KINDS),
   at: z.number().optional(),
   in: z.array(z.string()).optional(),
+  enter: Anim.optional(),
+  exit: Anim.optional(),
   w: Size.optional(),
   gap: z.number().optional(),
   pad: z.number().optional(),

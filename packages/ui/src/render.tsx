@@ -1,4 +1,12 @@
-import { buildAnim, type InlineAnim, type PresetName, type Timeline } from "@emaki/core";
+import {
+  type AnimSpec,
+  buildAnim,
+  type InlineAnim,
+  type PresetName,
+  resolvePreset,
+  sampleSpec,
+  type Timeline,
+} from "@emaki/core";
 import {
   createElement,
   type ComponentType,
@@ -354,14 +362,32 @@ function computeFx(
   return { current, prev, blend, textReveal: prevT + (curT - prevT) * blend };
 }
 
-/** Opacity for an `in`-gated node during a state crossfade; null = don't render. */
-function stateOpacity(node: UiNode, fx: StateFx): number | null {
+/** Resolve a node's `anim`/`enter`/`exit` (preset name or inline) to an AnimSpec. */
+function resolveAnim(anim: string | InlineAnim): AnimSpec {
+  return typeof anim === "string" ? resolvePreset(anim as PresetName) : buildAnim(anim);
+}
+
+type StateRender = { render: false } | { render: true; style?: CSSProperties };
+
+/**
+ * The per-node style during a state change. A node fully present in both the
+ * previous and current state renders plainly. One entering/leaving crossfades by
+ * default, or animates via its `enter`/`exit` motion (slide-in, push, etc.).
+ */
+function stateStyle(node: UiNode, fx: StateFx): StateRender {
   const inCur = visibleIn(node, fx.current);
   const inPrev = fx.prev !== null ? visibleIn(node, fx.prev) : inCur;
-  if (inCur && inPrev) return 1;
-  if (inCur) return fx.blend;
-  if (inPrev) return 1 - fx.blend;
-  return null;
+  if (inCur && inPrev) return { render: true };
+  if (!inCur && !inPrev) return { render: false };
+  const n = node as { enter?: string | InlineAnim; exit?: string | InlineAnim };
+  if (inCur) {
+    // entering: from → identity as blend 0→1
+    const style = n.enter ? (sampleSpec(resolveAnim(n.enter), fx.blend) as CSSProperties) : { opacity: fx.blend };
+    return { render: true, style };
+  }
+  // leaving: identity → exit.from ⇒ sample the exit spec backwards
+  const style = n.exit ? (sampleSpec(resolveAnim(n.exit), 1 - fx.blend) as CSSProperties) : { opacity: 1 - fx.blend };
+  return { render: true, style };
 }
 
 interface Ctx {
@@ -768,8 +794,8 @@ function hasWidth(node: UiNode): boolean {
 
 /** Render one node at `path`; leaves animate through the injected Anim, containers are plain layout. */
 function renderNode(node: UiNode, path: string, ctx: Ctx, Anim: AnimLike): ReactNode {
-  const op = stateOpacity(node, ctx.fx);
-  if (op === null || op <= 0.001) return null;
+  const st = stateStyle(node, ctx.fx);
+  if (!st.render) return null;
 
   if (isContainer(node)) {
     const isRow = IS_ROW.has(node.kind);
@@ -784,12 +810,12 @@ function renderNode(node: UiNode, path: string, ctx: Ctx, Anim: AnimLike): React
       else style = { minWidth: 0 };
       return createElement("div", { key: i, style }, el);
     });
-    const style = { ...containerStyle(node, ctx.t), ...(op < 1 ? { opacity: op } : {}) };
+    const style = { ...containerStyle(node, ctx.t), ...(st.style ?? {}) };
     return createElement("div", { style }, children);
   }
 
   let content = leaf(node, ctx);
-  if (op < 1) content = createElement("div", { style: { opacity: op } as CSSProperties }, content);
+  if (st.style) content = createElement("div", { style: st.style }, content);
   return createElement(Anim as ComponentType<Record<string, unknown>>, { target: path, as: "div", style: { minWidth: 0 } }, content);
 }
 
@@ -877,6 +903,29 @@ function renderChrome(scene: UiSceneProps, t: UiTheme, content: ReactNode): Reac
   return chromeShell([topbar, body], t);
 }
 
+// ── camera ───────────────────────────────────────────────────────────────────
+
+interface Cam {
+  scale: number;
+  x: number;
+  y: number;
+  dim: number;
+}
+const NO_CAM: Cam = { scale: 1, x: 0, y: 0, dim: 0 };
+
+function focusOf(states: State[], id: string | null): Cam {
+  const f = id !== null ? states.find((s) => s.id === id)?.focus : undefined;
+  return f ? { scale: f.scale, x: f.x, y: f.y, dim: f.dim } : NO_CAM;
+}
+
+/** The camera eases from the previous state's focus to the current one. */
+function cameraAt(states: State[], fx: StateFx): Cam {
+  const a = focusOf(states, fx.prev);
+  const b = focusOf(states, fx.current);
+  const l = (x: number, y: number) => x + (y - x) * fx.blend;
+  return { scale: l(a.scale, b.scale), x: l(a.x, b.x), y: l(a.y, b.y), dim: l(a.dim, b.dim) };
+}
+
 // ── scene ────────────────────────────────────────────────────────────────────
 
 /**
@@ -915,12 +964,42 @@ export function UiSceneView(props: {
     );
   }
 
-  return createElement(
+  // Camera: the whole mock eases scale/pan between per-state `focus`. `dim` is a
+  // vignette BEHIND the mock (darkens the surround, keeps the focus crisp).
+  // Deterministic — no measuring.
+  const cam = cameraAt(scene.states, fx);
+  const moved = cam.scale !== 1 || cam.x !== 0 || cam.y !== 0;
+  const staged = createElement(
     "div",
     {
-      style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%" } as CSSProperties,
+      key: "stage",
+      style: {
+        position: "relative",
+        zIndex: 1,
+        display: "flex",
+        justifyContent: "center",
+        width: "100%",
+        ...(moved ? { transform: `translate(${cam.x}%, ${cam.y}%) scale(${cam.scale})`, transformOrigin: "center center" } : {}),
+      } as CSSProperties,
     },
     mock,
+  );
+
+  // Only scenes that actually use the camera fill the whole frame (for the
+  // full-bleed vignette + zoom). Everything else keeps the plain centred layout,
+  // so non-camera scenes — and their goldens — are byte-identical.
+  const usesCamera = scene.states.some((s) => s.focus);
+  const outerStyle: CSSProperties = usesCamera
+    ? { position: "absolute", inset: 0, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }
+    : { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%" };
+
+  return createElement(
+    "div",
+    { style: outerStyle },
+    cam.dim > 0.001
+      ? createElement("div", { key: "dim", style: { position: "absolute", inset: 0, background: `rgba(10,12,20,${cam.dim})`, pointerEvents: "none", zIndex: 0 } as CSSProperties })
+      : null,
+    staged,
     scene.caption
       ? createElement(
           Anim as ComponentType<Record<string, unknown>>,
@@ -928,7 +1007,7 @@ export function UiSceneView(props: {
             key: "caption",
             target: "caption",
             as: "div",
-            style: { marginTop: 22, fontFamily: theme.fonts.mono, fontSize: 12, letterSpacing: "0.04em", color: theme.colors.muted, textAlign: "center" } as CSSProperties,
+            style: { position: "relative", zIndex: 1, marginTop: 22, fontFamily: theme.fonts.mono, fontSize: 12, letterSpacing: "0.04em", color: theme.colors.muted, textAlign: "center" } as CSSProperties,
           },
           scene.caption,
         )

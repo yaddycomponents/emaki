@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { buildAnim, stepStyleAt, stepToFramer, stepSpec, type TimelineStep } from '../src'
+import { buildAnim, sampleSpec, stepStyleAt, stepToFramer, stepSpec, type TimelineStep } from '../src'
+
+describe('sampleSpec — the motion-layer interpolator', () => {
+  const spec = buildAnim({ from: { x: -40, opacity: 0 }, dur: 0.5, ease: 'linear' })
+  it('is the from-state at progress 0 and settled at 1', () => {
+    const at0 = sampleSpec(spec, 0)
+    expect(at0.opacity).toBeCloseTo(0)
+    expect(at0.transform).toContain('-40px')
+    const at1 = sampleSpec(spec, 1)
+    expect(at1.opacity).toBeCloseTo(1)
+    expect(at1.transform).toContain('translate(0px, 0px)')
+  })
+})
 
 describe('inline animation (the open primitive)', () => {
   it('builds an AnimSpec from composed offsets, easing to identity', () => {

@@ -159,6 +159,27 @@ describe('ui scene — chrome, transitions, product primitives', () => {
     expect(root.children[2].kind).toBe('vector')
   })
 
+  it('parses the motion layer — state focus + node enter/exit', () => {
+    const p = uiSceneProps.parse({
+      states: [
+        { id: 'a', hold: 1 },
+        { id: 'b', hold: 2, focus: { scale: 1.5, x: -16, dim: 0.35 } },
+      ],
+      root: {
+        kind: 'col',
+        children: [
+          { kind: 'card', in: ['b'], enter: { from: { x: 70, opacity: 0 }, dur: 0.5, ease: 'back' }, children: [{ kind: 'text', value: 'flies in' }] },
+        ],
+      },
+    })
+    const focus = p.states[1]!.focus as { scale: number; x: number; y: number; dim: number }
+    expect(focus.scale).toBe(1.5)
+    expect(focus.x).toBe(-16)
+    expect(focus.y).toBe(0) // defaulted
+    expect(focus.dim).toBe(0.35)
+    expect((p.root.children[0] as { enter?: unknown }).enter).toBeTruthy()
+  })
+
   it('rejects a bad inline ease', () => {
     expect(() =>
       uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'text', value: 'x', anim: { ease: 'wobble' } }] } }),

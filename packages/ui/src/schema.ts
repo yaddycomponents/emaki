@@ -52,6 +52,10 @@ const base = {
   in: z.array(z.string()).optional(),
   /** Entrance motion — a preset name or inline `{from,dur,ease}`. Overrides the default. */
   anim: Anim.optional(),
+  /** How this node arrives when it enters a state (from `in`). Default: crossfade. */
+  enter: Anim.optional(),
+  /** How this node leaves when it exits a state. Default: crossfade. */
+  exit: Anim.optional(),
 }
 
 /** The UI type ramp — deliberately small (11–28px), decoupled from the slide scale. */
@@ -305,6 +309,8 @@ export interface ContainerNode {
   kind: (typeof CONTAINER_KINDS)[number]
   at?: number
   in?: string[]
+  enter?: string | { from?: Record<string, number>; dur?: number; ease?: unknown }
+  exit?: string | { from?: Record<string, number>; dur?: number; ease?: unknown }
   w?: number | string
   gap?: number
   pad?: number
@@ -333,6 +339,8 @@ export const Container: z.ZodType<ContainerNode> = z.lazy(() =>
       kind: z.enum(CONTAINER_KINDS),
       at: z.number().optional(),
       in: z.array(z.string()).optional(),
+      enter: Anim.optional(),
+      exit: Anim.optional(),
       w: Size.optional(),
       gap: z.number().optional(),
       pad: z.number().optional(),
@@ -350,9 +358,22 @@ export const Container: z.ZodType<ContainerNode> = z.lazy(() =>
 
 export const UiNode: z.ZodType<UiNode> = z.union([Leaf, Container]).meta({ id: 'UiNode' })
 
+/** Camera for a state — an eased viewport push-in / pan. Deterministic, no measuring. */
+export const Focus = z.object({
+  /** Zoom factor. 1 = whole scene; 1.4 = pushed in. */
+  scale: z.number().default(1),
+  /** Pan, as a percent of the scene (positive = shift content right). */
+  x: z.number().default(0),
+  y: z.number().default(0),
+  /** Darken the scene 0–1 for a cinematic focus. */
+  dim: z.number().min(0).max(1).default(0),
+})
+
 export const State = z.object({
   id: z.string(),
   hold: z.number().positive().default(1.5),
+  /** Camera for this state — the viewport eases to it at the state boundary. */
+  focus: Focus.optional(),
 })
 export type State = z.infer<typeof State>
 

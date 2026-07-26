@@ -82,6 +82,12 @@ for a new block. It's all still data — deterministic, themeable, validated.
   instead of floating. \`none\` (default) is a bare mock.
 - **transitions**: state changes \`crossfade\` by default (skeleton dissolves into
   text) over \`transitionMs\`; set \`transition:"cut"\` for a hard swap.
+- **camera** (the motion layer): give a STATE a \`focus:{ scale, x, y, dim }\` and
+  the viewport eases into it at that state's boundary — a push-in / pan, with an
+  optional \`dim\` vignette. e.g. zoom onto the AI result on the final state.
+- **element motion**: give a NODE \`enter\`/\`exit\` (a preset or inline anim) and it
+  slides/pops in when it enters a state (from \`in\`) instead of just fading —
+  "the new email arrives", "the Activity card flies in".
 - **type sizes** (\`text\`/\`bar\` \`size\`): ONLY eyebrow, label, body, md, lg, h2,
   metric — a small UI ramp (~11–26px). Theme tokens (rowLabel, chapter, …) are
   NOT valid node sizes.

@@ -62,5 +62,12 @@ live vocabulary. In brief:
 
 ## Themes
 `list_themes` for installed themes; set a deck-wide `theme` id. One accent per
-theme — users bring their own via the studio. Don't hardcode colours in nodes;
-tones (`primary`, `muted`, `good`, `danger`) resolve against the theme.
+theme. Don't hardcode colours in nodes; tones (`primary`, `muted`, `good`,
+`danger`) resolve against the theme.
+
+**Bring your own brand** — `theme_import`. YOU extract the brand from a logo,
+screenshot, or brand guide (a name and one accent colour, optionally bg/text/
+fonts); Emaki derives the rest into a valid theme. Write it to
+`themes/<id>.theme.json` beside the deck and set the deck's `theme` to that id —
+render and preview pick it up from that folder. Invent nothing: pull the accent
+from the actual brand, don't guess it.

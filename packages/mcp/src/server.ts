@@ -10,7 +10,7 @@ import {
   parseDeck,
   SceneOp,
 } from "@emaki/schema";
-import { THEMES } from "@emaki/themes";
+import { type BrandInput, buildTheme, THEMES } from "@emaki/themes";
 import { CONTAINER_KINDS, LEAF_KINDS } from "@emaki/ui";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -208,6 +208,38 @@ export function createServer(): McpServer {
     "list_templates",
     { description: "List first-party templates.", inputSchema: {} },
     async () => text(FIRST_PARTY_TEMPLATES.map((t) => `- ${t}`).join("\n")),
+  );
+
+  server.registerTool(
+    "theme_import",
+    {
+      description:
+        "Turn a brand into a full, valid theme. YOU extract the brand from a logo/screenshot/brand guide (a name + one accent colour, optionally bg/text/fonts); Emaki derives surface, muted, the data palette, and the type scale. Write it to `themes/<id>.theme.json` beside the deck and set the deck's `theme` to that id — it will render. Writes to `out` if given, else returns the theme JSON.",
+      inputSchema: {
+        brand: z
+          .unknown()
+          .describe(
+            'e.g. { name:"Acme", accent:"#5533ff", mode:"light", bg?, text?, fonts?:{ display?, body?, mono? } }',
+          ),
+        out: z.string().optional(),
+      },
+    },
+    async ({ brand, out }) => {
+      let theme;
+      try {
+        theme = buildTheme(brand as BrandInput);
+      } catch (e) {
+        return text(`✗ ${(e as Error).message}`, true);
+      }
+      const json = JSON.stringify(theme, null, 2);
+      if (out) {
+        writeFileSync(resolve(out), json + "\n");
+        return text(
+          `✓ built theme "${theme.id}" → ${out} · set the deck's \`theme\` to "${theme.id}"`,
+        );
+      }
+      return text(json);
+    },
   );
 
   server.registerTool(

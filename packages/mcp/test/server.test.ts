@@ -83,6 +83,28 @@ describe("emaki mcp server", () => {
     expect(textOf(res)).toMatch(/describe_ui_nodes/);
   });
 
+  it("theme_import turns a brand into a full theme", async () => {
+    const client = await connect();
+    const res = await client.callTool({
+      name: "theme_import",
+      arguments: { brand: { name: "Acme Corp", accent: "#5533ff" } },
+    });
+    const theme = JSON.parse(textOf(res));
+    expect(theme.id).toBe("acme-corp");
+    expect(theme.colors.accent).toBe("#5533ff");
+    expect(theme.colors.surface).toMatch(/^#/);
+  });
+
+  it("theme_import rejects a brand with no accent", async () => {
+    const client = await connect();
+    const res = await client.callTool({
+      name: "theme_import",
+      arguments: { brand: { name: "No Accent" } },
+    });
+    expect(res.isError).toBe(true);
+    expect(textOf(res)).toMatch(/accent/);
+  });
+
   it("serves the guide and schema resources", async () => {
     const client = await connect();
     const { resources } = await client.listResources();

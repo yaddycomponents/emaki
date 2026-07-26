@@ -1,9 +1,32 @@
-import { readFileSync, existsSync } from 'node:fs'
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { bundle } from '@remotion/bundler'
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer'
 import { parseDeck, type Aspect, type Deck } from '@emaki/schema'
+import { assertThemeValid, type Theme } from '@emaki/themes'
+
+/**
+ * Load imported themes from a `themes/` folder beside the deck (each a
+ * `*.theme.json` validated against the contract). These render even though they
+ * aren't compiled into @emaki/themes — the map travels with the deck.
+ */
+function loadThemesDir(deckPath: string): Record<string, Theme> {
+  const dir = join(dirname(resolve(deckPath)), 'themes')
+  if (!existsSync(dir)) return {}
+  const themes: Record<string, Theme> = {}
+  for (const file of readdirSync(dir)) {
+    if (!file.endsWith('.json')) continue
+    try {
+      const theme = JSON.parse(readFileSync(join(dir, file), 'utf8')) as Theme
+      assertThemeValid(theme)
+      themes[theme.id] = theme
+    } catch {
+      // A malformed theme file is skipped, not fatal — the deck may not use it.
+    }
+  }
+  return themes
+}
 
 export interface RenderOptions {
   deckPath: string
@@ -39,9 +62,9 @@ function loadDeck(deckPath: string, aspect?: Aspect): Deck {
 }
 
 /** Bundle once and select the deck composition for a given deck. */
-async function prepare(deck: Deck) {
+async function prepare(deck: Deck, themes: Record<string, Theme>) {
   const serveUrl = await bundle({ entryPoint: resolveEntry() })
-  const inputProps = { deck }
+  const inputProps = { deck, themes }
   const composition = await selectComposition({ serveUrl, id: 'deck', inputProps })
   return { serveUrl, inputProps, composition }
 }
@@ -49,7 +72,7 @@ async function prepare(deck: Deck) {
 /** Render a deck to an MP4 via Remotion. Validates the deck first. */
 export async function renderDeck(options: RenderOptions): Promise<RenderResult> {
   const deck = loadDeck(options.deckPath, options.aspect)
-  const { serveUrl, inputProps, composition } = await prepare(deck)
+  const { serveUrl, inputProps, composition } = await prepare(deck, loadThemesDir(options.deckPath))
 
   await renderMedia({
     composition,
@@ -79,7 +102,7 @@ export interface StillOptions {
 /** Render a single frame of a deck to a PNG — the unit of the frame-diff suite. */
 export async function renderDeckStill(options: StillOptions): Promise<{ out: string; width: number; height: number }> {
   const deck = loadDeck(options.deckPath, options.aspect)
-  const { serveUrl, inputProps, composition } = await prepare(deck)
+  const { serveUrl, inputProps, composition } = await prepare(deck, loadThemesDir(options.deckPath))
   const frame = Math.max(0, Math.min(options.frame, composition.durationInFrames - 1))
 
   await renderStill({ composition, serveUrl, output: resolve(options.out), frame, inputProps })
@@ -99,7 +122,7 @@ export async function renderDeckStills(options: {
   shots: StillShot[]
 }): Promise<{ width: number; height: number; durationInFrames: number }> {
   const deck = loadDeck(options.deckPath, options.aspect)
-  const { serveUrl, inputProps, composition } = await prepare(deck)
+  const { serveUrl, inputProps, composition } = await prepare(deck, loadThemesDir(options.deckPath))
   for (const shot of options.shots) {
     const frame = Math.max(0, Math.min(shot.frame, composition.durationInFrames - 1))
     await renderStill({ composition, serveUrl, output: resolve(shot.out), frame, inputProps })

@@ -1,7 +1,14 @@
-/* Emaki Studio design tokens — recreated from the design handoff.
-   Dark is the default; light applies via [data-theme="light"]. Every color,
-   length, radius, hairline and chrome height is a token; components reference
-   var() only — the literals live here once. */
+/* Emaki Studio design tokens.
+   Dark is the default; light applies via [data-theme="light"].
+   Colour, type, space, layout, chrome geometry and motion are all tokens —
+   components reference var() only. Literals live here once.
+
+   WHAT WAS MISSING BEFORE: colour + spacing were tokenised, but the type scale
+   and every LAYOUT constant were not, so panes, max-widths and pane geometry
+   got re-guessed per component. That is what produced full-bleed cards, an
+   oversized right rail and a too-tall top bar. Those are now tokens too. */
+
+/* ─────────────────────────────  COLOUR  ───────────────────────────── */
 
 :root,
 :root[data-theme="dark"] {
@@ -32,6 +39,12 @@
   --del-line: #cd6f63;
 
   --shadow: 0 18px 44px rgba(4, 4, 6, 0.62);
+
+  /* text that sits ON the --void letterbox / on code blocks */
+  --on-void: #d8dbe2;
+  --on-void-2: #8b90a0;
+
+  color-scheme: dark;
 }
 
 :root[data-theme="light"] {
@@ -41,7 +54,7 @@
   --raised: #fdfdff;
   --line: #d6dce7;
   --line-soft: #e5e9f1;
-  --void: #333a45;
+  --void: #333a45; /* stays dark in light mode — the film must frame */
 
   --text: #171b22;
   --text-2: #4f5763;
@@ -62,14 +75,57 @@
   --del-line: #c4564a;
 
   --shadow: 0 10px 28px rgba(23, 27, 34, 0.09);
+
+  --on-void: #e8ebf0;
+  --on-void-2: #9aa2ae;
+
+  color-scheme: light;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   The rest is theme-independent.
+   ══════════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* type */
+  /* ───────────────────────────  TYPE  ─────────────────────────── */
+
   --font-ui: "Public Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* spacing scale — the literals live here, referenced as var() elsewhere */
+  /* Size ramp. Every size in the product is one of these — no ad-hoc values.
+     9/10/11 are mono-only (labels, derived data, commands). */
+  --fs-9: 9px;
+  --fs-10: 10px;
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-17: 17px;
+  --fs-22: 22px;
+  --fs-30: 30px;
+  --fs-42: 42px;
+  --fs-74: 74px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.12; /* display headings */
+  --lh-snug: 1.2;
+  --lh-body: 1.5;
+  --lh-relaxed: 1.6;
+  --lh-mono: 1.75; /* code, log output, diff rows */
+
+  --ls-display: -0.02em; /* 22px and up */
+  --ls-tight: -0.01em; /* 17px section titles */
+  --ls-label: 0.1em; /* uppercase mono micro-labels */
+  --ls-label-wide: 0.12em;
+  --ls-eyebrow: 0.16em; /* in-film eyebrows, gallery kickers */
+  --ls-eyebrow-wide: 0.18em;
+
+  /* ──────────────────────────  SPACING  ────────────────────────── */
+
   --s-1: 2px;
   --s-2: 4px;
   --s-3: 6px;
@@ -77,31 +133,120 @@
   --s-5: 12px;
   --s-6: 16px;
   --s-7: 24px;
+  --s-8: 32px; /* frame-level gutters */
+  --s-9: 56px; /* stage separation on the design canvas */
 
-  /* radii */
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 8px;
-  --r-xl: 10px;
+  /* Named paddings so panes don't re-guess */
+  --pad-pane: var(--s-5); /* 12px — inside left/right panes */
+  --pad-panel: var(--s-6); /* 16px — dialogs, cards */
+  --pad-canvas: 28px; /* letterbox inset around the film */
+  --pad-row-x: var(--s-4); /* 10px — scene-list row horizontal */
+  --pad-topbar-x: var(--s-5); /* 12px */
 
-  /* the single hairline; borders reference these */
+  /* ───────────────────────  RADII & BORDERS  ────────────────────── */
+
+  --r-sm: 4px; /* chips, tabs, swatches */
+  --r-md: 6px; /* buttons, inputs, segmented pills */
+  --r-lg: 8px; /* cards */
+  --r-xl: 10px; /* dialogs, frames */
+  --r-pill: 999px;
+
   --hairline: 1px;
   --bd: var(--hairline) solid var(--line);
   --bd-soft: var(--hairline) solid var(--line-soft);
+  --bd-accent: var(--hairline) solid var(--accent-line);
+  --bd-add: var(--hairline) solid var(--add-line);
+  --bd-del: var(--hairline) solid var(--del-line);
+  --bd-warn: var(--hairline) solid var(--warn);
+  --bd-dashed: var(--hairline) dashed var(--line);
 
   --focus: 0 0 0 3px var(--accent-soft);
+  --ring-accent: 0 0 0 var(--hairline) var(--accent-line);
+  --sel-bar: inset 2px 0 0 var(--accent); /* selected scene-list row */
+  --sel-bar-add: inset 2px 0 0 var(--add-line);
+  --sel-bar-del: inset 2px 0 0 var(--del-line);
+  --tab-underline: inset 0 -2px 0 var(--accent);
 
-  /* fixed chrome heights */
+  /* ──────────────────  CHROME GEOMETRY (fixed)  ─────────────────── */
+
   --h-topbar: 44px;
-  --h-row: 44px;
-  --h-group: 22px;
+  --h-row: 44px; /* scene-list row */
+  --h-group: 22px; /* section/chapter band in the scene list */
   --h-tabs: 30px;
+  --h-pane-header: 30px;
   --h-transport: 52px;
   --h-cmdbar: 26px;
+  --h-statusbar: 26px;
 
-  /* chrome is nearly still */
+  --h-control: 26px; /* transport buttons, top-bar pills */
+  --h-control-lg: 32px; /* simple-mode / gallery buttons */
+  --h-input: 34px;
+
+  /* THE ONES THAT WERE MISSING — pane widths.
+     Authored at 1440×900. Centre pane always flexes; these never do. */
+  --w-scenelist: 238px;
+  --w-scenelist-mcp: 252px; /* live-update view: room for change chips */
+  --w-inspector: 328px;
+  --w-inspector-narrow: 300px; /* 9:16, where flanks take width */
+  --w-filmstrip: 196px; /* 9:16 left flank */
+  --w-transport-v: 150px; /* 9:16 right flank */
+  --w-rail: 420px; /* first-run right rail */
+  --w-theme-panel: 398px; /* import-from-brand right panel */
+  --w-theme-builder: 378px; /* start-blank left panel */
+
+  /* Overlay widths */
+  --w-dialog: 472px; /* render dialog */
+  --w-popover: 452px; /* MCP panel */
+  --w-menu: 288px; /* create menu */
+
+  /* Content measures — these stop cards going full-bleed */
+  --measure-actions: 760px; /* first-run action grid */
+  --measure-h1: 18em;
+  --measure-prose: 44em;
+  --measure-caption: 20em;
+
+  /* Frame */
+  --app-w: 1440px;
+  --app-h: 900px;
+
+  /* ─────────────────  COMPONENT-SCALE CONSTANTS  ────────────────── */
+
+  --dot: 5px; /* scene validity dot */
+  --dot-lg: 7px; /* MCP / render status dot */
+  --idx-w: 14px; /* scene-list index column */
+  --tool-name-w: 168px; /* MCP tool list — must fit create_theme_from_image */
+  --swatch: 24px;
+  --swatch-lg: 30px;
+  --thumb-w: 52px; /* 9:16 filmstrip thumbnail */
+  --thumb-h: 92px;
+  --track: 5px; /* progress bar */
+  --seg-h: 14px; /* horizontal scrubber segment */
+  --seg-w: 8px; /* vertical scrubber column */
+  --playhead: 7px;
+
+  --grid-gap: var(--s-5); /* 12px — action grids */
+  --grid-gap-lg: var(--s-6); /* 16px — gallery grids */
+  --gallery-cols: 4;
+
+  --op-muted: 0.7; /* removed row */
+  --op-disabled: 0.5;
+  --op-hint: 0.6; /* ⌘R hint inside a filled button */
+
+  --z-popover: 40;
+  --z-dialog: 60;
+
+  /* ─────────────────────────  MOTION  ──────────────────────────── */
+  /* The tool is about motion, so the chrome is nearly still.
+     Colour/opacity only — never transform, never while the canvas plays. */
+
   --t: 140ms ease-out;
+  --t-fast: 120ms ease-out;
+  --t-slow: 160ms ease-out;
+  --transition-chrome: background-color var(--t), border-color var(--t),
+    color var(--t), box-shadow var(--t), opacity var(--t);
 }
+
+/* ────────────────────────────  RESET  ──────────────────────────── */
 
 * {
   box-sizing: border-box;
@@ -118,14 +263,64 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--fs-13);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-button {
-  font-family: inherit;
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--text);
 }
 
 ::selection {
   background: var(--accent-soft);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t: 0ms;
+    --t-fast: 0ms;
+    --t-slow: 0ms;
+  }
+}
+
+/* ──────────────────────  SHARED PRIMITIVES  ────────────────────── */
+/* Two recipes that recur on nearly every screen. Everything else is a
+   component; these are here because inlining them drifts. */
+
+/* Uppercase mono micro-label: pane headers, field labels, section kickers. */
+.u-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* Derived data — durations, frame counts, paths, timecodes, IDs, commands.
+   The monospace rule is load-bearing: prose is UI sans, data is mono. */
+.u-data {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
 }

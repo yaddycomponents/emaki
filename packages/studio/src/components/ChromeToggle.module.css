@@ -1,0 +1,18 @@
+.btn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: var(--bd);
+  background: var(--panel);
+  color: var(--text-2);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  flex: none;
+  transition: color var(--t), border-color var(--t);
+}
+
+.btn:hover {
+  color: var(--text);
+  border-color: var(--accent-line);
+}

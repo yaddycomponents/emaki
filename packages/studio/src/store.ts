@@ -1,6 +1,15 @@
 import { create } from 'zustand'
 import { parseDeck, type Aspect, type Deck } from '@emaki/schema'
-import { SAMPLE_DECK } from './sample'
+import { SAMPLE_DECK, TEMPLATE_DECKS } from './sample'
+
+export type View =
+  | 'first-run'
+  | 'studio'
+  | 'templates'
+  | 'theme-gallery'
+  | 'theme-import'
+  | 'theme-blank'
+  | 'inventory'
 
 export interface CommandEntry {
   command: string
@@ -8,10 +17,30 @@ export interface CommandEntry {
   ms: number
 }
 
+export type ChangeKind = 'updated' | 'new' | 'removed'
+export interface Change {
+  kind: ChangeKind
+  rationale?: string
+  at: number
+}
+
+export interface RenderState {
+  status: 'idle' | 'running' | 'done' | 'failed'
+  frame: number
+  total: number
+  error?: string
+}
+
+export interface McpState {
+  connected: boolean
+  clientName: string
+  lastCall?: { tool: string; at: number; ops: number }
+}
+
 type ChromeTheme = 'dark' | 'light'
 
 interface StudioState {
-  /** The editable JSON text — the source of truth the inspector binds to. */
+  view: View
   text: string
   deck: Deck | null
   error: string | null
@@ -23,7 +52,13 @@ interface StudioState {
   chrome: ChromeTheme
 
   commandLog: CommandEntry[]
+  render: RenderState
+  mcp: McpState
+  changes: Record<string, Change>
+  reloadedAt: number | null
 
+  setView: (view: View) => void
+  openDeck: (deck: Deck, command: string) => void
   setText: (text: string) => void
   select: (index: number) => void
   setAspect: (aspect: Aspect) => void
@@ -33,6 +68,16 @@ interface StudioState {
   toggleClean: () => void
   toggleChrome: () => void
   log: (command: string, result?: string, ms?: number) => void
+
+  startRender: () => void
+  setRenderFrame: (frame: number) => void
+  finishRender: () => void
+  cancelRender: () => void
+
+  connectMcp: () => void
+  disconnectMcp: () => void
+  simulateMcpEdit: () => void
+  dismissChanges: () => void
 }
 
 const initialText = JSON.stringify(SAMPLE_DECK, null, 2)
@@ -49,8 +94,21 @@ function parse(text: string): { deck: Deck | null; error: string | null } {
 }
 
 const initial = parse(initialText)
+const now = () => Date.now()
+
+function initialView(): View {
+  try {
+    const v = new URLSearchParams(window.location.search).get('view')
+    const ok: View[] = ['first-run', 'studio', 'templates', 'theme-gallery', 'theme-import', 'theme-blank', 'inventory']
+    if (v && (ok as string[]).includes(v)) return v as View
+  } catch {
+    /* no window */
+  }
+  return 'first-run'
+}
 
 export const useStudio = create<StudioState>((set, get) => ({
+  view: initialView(),
   text: initialText,
   deck: initial.deck,
   error: initial.error,
@@ -59,9 +117,28 @@ export const useStudio = create<StudioState>((set, get) => ({
   playing: false,
   loop: false,
   cleanPreview: false,
-  chrome: 'dark',
+  chrome: 'light',
 
-  commandLog: [{ command: 'emaki studio deck.json', result: 'ready', ms: 8 }],
+  commandLog: [{ command: 'emaki studio', result: 'ready', ms: 8 }],
+  render: { status: 'idle', frame: 0, total: 0 },
+  mcp: { connected: false, clientName: 'claude-code' },
+  changes: {},
+  reloadedAt: null,
+
+  setView: (view) => set({ view }),
+
+  openDeck: (deck, command) => {
+    set({
+      view: 'studio',
+      text: JSON.stringify(deck, null, 2),
+      deck,
+      error: null,
+      selected: 0,
+      changes: {},
+      reloadedAt: null,
+    })
+    get().log(command, 'ok', 12)
+  },
 
   setText: (text) => {
     const { deck, error } = parse(text)
@@ -89,5 +166,75 @@ export const useStudio = create<StudioState>((set, get) => ({
   toggleChrome: () => set((s) => ({ chrome: s.chrome === 'dark' ? 'light' : 'dark' })),
 
   log: (command, result = 'ok', ms = 0) =>
-    set((s) => ({ commandLog: [...s.commandLog, { command, result, ms }].slice(-20) })),
+    set((s) => ({ commandLog: [...s.commandLog, { command, result, ms }].slice(-30) })),
+
+  startRender: () => {
+    const { deck, error } = get()
+    if (error || !deck) {
+      set({
+        render: {
+          status: 'failed',
+          frame: 214,
+          total: 555,
+          error:
+            "TypeError: Cannot read properties of undefined (reading 'length')\n  at CodeBlock (blocks/code.tsx:41:22)\n  body.emphasis references line 3 of a 2-line source",
+        },
+      })
+      get().log(`emaki render deck.json --aspect ${deck?.aspect ?? '9:16'}`, 'failed', 0)
+      return
+    }
+    // total frames computed by the dialog; seed with a placeholder
+    set({ render: { status: 'running', frame: 0, total: 0 } })
+    get().log(`emaki render deck.json --aspect ${deck.aspect}`, 'running', 2)
+  },
+  setRenderFrame: (frame) => set((s) => ({ render: { ...s.render, frame } })),
+  finishRender: () =>
+    set((s) => {
+      get().log(`emaki render deck.json`, `done · ${s.render.total}f`, 0)
+      return { render: { ...s.render, status: 'done' } }
+    }),
+  cancelRender: () => set({ render: { status: 'idle', frame: 0, total: 0 } }),
+
+  connectMcp: () =>
+    set({ mcp: { connected: true, clientName: 'claude-code', lastCall: undefined } }),
+  disconnectMcp: () => set({ mcp: { connected: false, clientName: 'claude-code' } }),
+
+  // Stands in for a real apply_ops write picked up by the file-watcher (tomorrow):
+  // patches a scene, inserts one, removes one — and marks the changes.
+  simulateMcpEdit: () => {
+    const { deck } = get()
+    if (!deck || deck.scenes.length < 2) return
+    const next = structuredClone(deck)
+    const patched = next.scenes[1]!
+    if (patched.type === 'statement') {
+      ;(patched.props as { text: string }).text = 'Two years of debt, cleared in one branch.'
+    }
+    const inserted = {
+      id: `scene-${next.scenes.length + 1}`,
+      type: 'stat' as const,
+      props: { value: '16', label: 'debts closed', caption: 'across three repos' },
+    }
+    next.scenes.splice(2, 0, inserted)
+    const changes: Record<string, Change> = {
+      [patched.id]: {
+        kind: 'updated',
+        rationale: 'The caption restated the title, so I replaced it with the number the title doesn’t give.',
+        at: now(),
+      },
+      [inserted.id]: { kind: 'new', at: now() },
+    }
+    set({
+      view: 'studio',
+      text: JSON.stringify(next, null, 2),
+      deck: next,
+      error: null,
+      changes,
+      reloadedAt: now(),
+      mcp: { connected: true, clientName: 'claude-code', lastCall: { tool: 'apply_ops', at: now(), ops: 3 } },
+    })
+    get().log('deck.json changed on disk · reloaded', 'ok', 31)
+  },
+  dismissChanges: () => set({ changes: {}, reloadedAt: null }),
 }))
+
+export { TEMPLATE_DECKS }

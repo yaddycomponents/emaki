@@ -1,48 +1,35 @@
 import { useEffect } from 'react'
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import { TopBar } from './components/TopBar'
-import { SceneList } from './components/SceneList'
-import { Player } from './components/Player'
-import { RightPane } from './components/RightPane'
-import { Transport } from './components/Transport'
-import { CommandBar } from './components/CommandBar'
 import { useStudio } from './store'
-import s from './App.module.css'
+import { Studio } from './views/Studio'
+import { FirstRun } from './views/FirstRun'
+import { TemplateGallery } from './views/TemplateGallery'
+import { ThemeGallery } from './views/ThemeGallery'
+import { ThemeImport } from './views/ThemeImport'
+import { ThemeBlank } from './views/ThemeBlank'
+import { Inventory } from './views/Inventory'
 
 export function App() {
+  const view = useStudio((x) => x.view)
   const chrome = useStudio((x) => x.chrome)
-  const clean = useStudio((x) => x.cleanPreview)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', chrome)
   }, [chrome])
 
-  if (clean) {
-    return (
-      <div className={s.clean}>
-        <Player />
-      </div>
-    )
+  switch (view) {
+    case 'first-run':
+      return <FirstRun />
+    case 'templates':
+      return <TemplateGallery />
+    case 'theme-gallery':
+      return <ThemeGallery />
+    case 'theme-import':
+      return <ThemeImport />
+    case 'theme-blank':
+      return <ThemeBlank />
+    case 'inventory':
+      return <Inventory />
+    default:
+      return <Studio />
   }
-
-  return (
-    <div className={s.app}>
-      <TopBar />
-      <PanelGroup direction="horizontal" className={s.body}>
-        <Panel defaultSize={17} minSize={12} maxSize={26}>
-          <SceneList />
-        </Panel>
-        <PanelResizeHandle className={s.handle} />
-        <Panel defaultSize={60} minSize={30}>
-          <Player />
-        </Panel>
-        <PanelResizeHandle className={s.handle} />
-        <Panel defaultSize={23} minSize={16} maxSize={34}>
-          <RightPane />
-        </Panel>
-      </PanelGroup>
-      <Transport />
-      <CommandBar />
-    </div>
-  )
 }

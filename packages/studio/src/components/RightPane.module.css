@@ -7,6 +7,62 @@
   border-left: var(--bd);
 }
 
+.prov {
+  flex: none;
+  background: var(--accent-soft);
+  border-bottom: var(--bd-soft);
+  padding: var(--s-4) var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.provHead {
+  display: flex;
+  align-items: center;
+}
+
+.provLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.provDismiss {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.provDismiss:hover {
+  color: var(--text);
+}
+
+.provText {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.provMeta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.tabsRoot {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .tabs {
   height: var(--h-tabs);
   flex: none;

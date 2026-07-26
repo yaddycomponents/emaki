@@ -13,6 +13,12 @@
   height: 16px;
   border-radius: var(--r-sm);
   background: var(--accent);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
   flex: none;
 }
 
@@ -61,12 +67,30 @@
   color: var(--accent);
 }
 
+.reloaded {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: var(--hairline) solid var(--accent-line);
+  border-radius: var(--r-sm);
+  padding: var(--s-1) var(--s-3);
+}
+
 .theme {
   display: flex;
   align-items: center;
   gap: var(--s-3);
   font-size: 12px;
   color: var(--text-2);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.theme:hover {
+  color: var(--text);
 }
 
 .swatch {
@@ -121,7 +145,24 @@
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-3);
-  cursor: default;
+  cursor: pointer;
+  border: var(--hairline) solid transparent;
+  background: transparent;
+  border-radius: var(--r-sm);
+  padding: var(--s-2) var(--s-3);
+}
+
+.mcp:hover {
+  border-color: var(--line);
+}
+
+.mcpOn {
+  color: var(--text-2);
+  border-color: var(--line);
+}
+
+.pop {
+  z-index: 40;
 }
 
 .iconBtn {

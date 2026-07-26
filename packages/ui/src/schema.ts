@@ -40,6 +40,16 @@ export const Text = z.object({
   size: TextSize.default('body'),
   mono: z.boolean().default(false),
   weight: z.enum(['regular', 'medium', 'bold']).default('regular'),
+  /** Gradient fill — `ai` is the pink→blue AI emphasis. Overrides `tone`. */
+  gradient: z.enum(['ai']).optional(),
+})
+
+export const Sparkle = z.object({
+  ...base,
+  kind: z.literal('sparkle'),
+  size: z.number().default(18),
+  /** Solid colour override; omit for the pink→blue AI gradient. */
+  color: z.string().optional(),
 })
 
 export const Badge = z.object({
@@ -58,6 +68,8 @@ export const Dot = z.object({
   initials: z.string().max(2).optional(),
   /** Arbitrary colour (hex) — overrides the accent. e.g. per-label status dots. */
   color: z.string().optional(),
+  /** Gradient fill — `ai` is the pink→blue AI avatar. */
+  gradient: z.enum(['ai']).optional(),
 })
 
 /** The icon allowlist — resolved to a drawn glyph by the renderer. `list_icons` returns these. */
@@ -189,6 +201,7 @@ export const Leaf = z.discriminatedUnion('kind', [
   Count,
   Divider,
   Image,
+  Sparkle,
   Button,
   Checkbox,
   Chip,
@@ -210,6 +223,7 @@ export const LEAF_KINDS = [
   'count',
   'divider',
   'image',
+  'sparkle',
   'button',
   'checkbox',
   'chip',

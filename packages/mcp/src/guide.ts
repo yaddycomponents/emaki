@@ -62,6 +62,9 @@ live vocabulary. In brief:
   https URL. This is how a mock actually looks like the product.
 - **product primitives**: \`button\` (variant filled|outline|ghost, icon?),
   \`checkbox\`, \`chip\` (filter/tag), \`tabs\` (items[], active), \`search\` field.
+- **the AI look**: \`sparkle\` (the animated pink→blue AI star), \`text\`/\`dot\`
+  \`gradient:"ai"\` (gradient text / gradient avatar), and \`badge\` \`tone:"ai"\`
+  (a sparkle + gradient pill). Use these for "AI replied / AI drafted" moments.
 - **chrome**: set scene \`chrome\` to \`window\` (title bar) or \`app\` (top bar +
   nav rail) and \`title\` to name it — the mock then sits in a real app frame
   instead of floating. \`none\` (default) is a bare mock.

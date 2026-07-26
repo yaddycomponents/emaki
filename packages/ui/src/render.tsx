@@ -48,6 +48,7 @@ const PRESET_FOR: Record<LeafNode["kind"], PresetName> = {
   count: "fadeUp",
   divider: "fadeIn",
   image: "fadeIn",
+  sparkle: "popIn",
   button: "fadeUp",
   checkbox: "fadeUp",
   chip: "popIn",
@@ -140,6 +141,45 @@ const shimmer = (t: UiTheme, lite: boolean): string =>
   withAlpha(t.colors.text, lite ? 0.05 : 0.1);
 
 const hairline = (t: UiTheme): string => withAlpha(t.colors.text, 0.08);
+
+// The signature AI look — a pink→blue gradient (ported from v1's AI-Reply deck).
+const AI_GRADIENT = "linear-gradient(64deg, #eb2f96 30%, #1d39c4 70%)";
+const AI_PINK = "#eb2f96";
+const AI_BLUE = "#1d39c4";
+
+/** The AI sparkle mark — a gradient four-point star. Solid `color` overrides the gradient. */
+function renderSparkle(size: number, color?: string): ReactNode {
+  const fill = color ?? "url(#emaki-ai-grad)";
+  return createElement(
+    "svg",
+    { width: size, height: size, viewBox: "0 0 24 24", style: { display: "block", flexShrink: 0 } as CSSProperties },
+    color
+      ? null
+      : createElement(
+          "defs",
+          { key: "d" },
+          createElement(
+            "linearGradient",
+            { id: "emaki-ai-grad", x1: "0", y1: "0", x2: "1", y2: "1" },
+            createElement("stop", { offset: "0%", stopColor: AI_PINK }),
+            createElement("stop", { offset: "100%", stopColor: AI_BLUE }),
+          ),
+        ),
+    createElement("path", { key: "p1", d: "M12 1.5 L14 9 L21.5 11 L14 13 L12 20.5 L10 13 L2.5 11 L10 9 Z", fill }),
+    createElement("path", { key: "p2", d: "M19 3 L19.8 5.6 L22.5 6.5 L19.8 7.4 L19 10 L18.2 7.4 L15.5 6.5 L18.2 5.6 Z", fill, opacity: 0.85 }),
+  );
+}
+
+/** Gradient-clipped text (the AI emphasis style). */
+function gradientTextStyle(): CSSProperties {
+  return {
+    background: AI_GRADIENT,
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    color: "transparent",
+  };
+}
 
 // The icon allowlist, drawn as stroke primitives on a 24×24 grid (Feather-style).
 type IconEl = [string, Record<string, number | string>, boolean?];
@@ -267,7 +307,27 @@ interface Ctx {
 // ── leaves ───────────────────────────────────────────────────────────────────
 
 function badge(node: Extract<LeafNode, { kind: "badge" }>, t: UiTheme): ReactNode {
-  const color = node.color ?? (node.tone === "ai" ? t.colors.accent : textColor(t, node.tone));
+  // tone:"ai" is the signature mark — a sparkle + gradient label on a soft pill.
+  if (node.tone === "ai" && !node.color) {
+    return createElement(
+      "span",
+      {
+        style: {
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "4px 10px",
+          borderRadius: 999,
+          background: "linear-gradient(90deg, rgba(235,47,150,0.09), rgba(29,57,196,0.09))",
+          border: "1px solid rgba(235,47,150,0.18)",
+          whiteSpace: "nowrap",
+        } as CSSProperties,
+      },
+      renderSparkle(14),
+      createElement("span", { key: "l", style: { fontFamily: t.fonts.mono, fontSize: 11, fontWeight: 600, ...gradientTextStyle() } as CSSProperties }, node.label),
+    );
+  }
+  const color = node.color ?? textColor(t, node.tone);
   return createElement(
     "span",
     {
@@ -294,8 +354,8 @@ function textStyle(node: Extract<LeafNode, { kind: "text" }>, t: UiTheme): CSSPr
     fontFamily: node.mono ? t.fonts.mono : t.fonts.body,
     fontSize: TEXT_PX[node.size],
     fontWeight: node.weight === "bold" ? 700 : node.weight === "medium" ? 500 : 400,
-    color: textColor(t, node.tone),
     lineHeight: 1.3,
+    ...(node.gradient === "ai" ? gradientTextStyle() : { color: textColor(t, node.tone) }),
   };
 }
 
@@ -361,6 +421,7 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
     case "dot": {
       const accent = node.color ?? t.colors.accent;
       const solid = !node.initials && node.size <= 16;
+      const ai = node.gradient === "ai";
       return createElement(
         "div",
         {
@@ -368,8 +429,8 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
             width: node.size,
             height: node.size,
             borderRadius: "50%",
-            background: solid ? accent : withAlpha(accent, 0.16),
-            color: accent,
+            background: ai ? AI_GRADIENT : solid ? accent : withAlpha(accent, 0.16),
+            color: ai ? "#fff" : accent,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -384,6 +445,8 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
     }
     case "icon":
       return renderIcon(node.name, node.color ?? textColor(t, node.tone));
+    case "sparkle":
+      return renderSparkle(node.size, node.color);
     case "image":
       return createElement("img", {
         src: node.src,

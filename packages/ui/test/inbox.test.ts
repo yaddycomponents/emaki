@@ -121,6 +121,21 @@ describe('ui scene — chrome, transitions, product primitives', () => {
     ])
   })
 
+  it('parses the AI look — sparkle node + gradient on text/dot', () => {
+    const p = uiSceneProps.parse({
+      root: {
+        kind: 'row',
+        children: [
+          { kind: 'sparkle', size: 20 },
+          { kind: 'text', value: 'AI', gradient: 'ai' },
+          { kind: 'dot', gradient: 'ai', initials: 'AI' },
+        ],
+      },
+    })
+    expect(p.root.children.map((c) => (c as { kind: string }).kind)).toEqual(['sparkle', 'text', 'dot'])
+    expect((p.root.children[1] as { gradient?: string }).gradient).toBe('ai')
+  })
+
   it('rejects an out-of-allowlist button icon', () => {
     expect(() =>
       uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'button', label: 'x', icon: 'not-an-icon' }] } }),

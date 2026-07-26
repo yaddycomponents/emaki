@@ -12,25 +12,25 @@
     { "id": "compare", "type": "compare-bars", "props": { "title": "Response time", "unit": "m", "rows": [{ "label": "manual", "before": 42, "after": 3 }] } },
     { "id": "mock", "type": "ui-mock", "props": { "app": "inbox · auto-reply", "title": "the drafted reply", "lines": ["Hi Sam —", "Friday works; deck by Thursday."] } },
     { "id": "scene", "type": "ui-scene", "props": {
+      "chrome": "app", "title": "Growfin",
       "caption": "One reply — sent, logged, and a PTP created",
       "states": [{ "id": "skeleton", "hold": 1 }, { "id": "loaded", "hold": 2.5 }],
-      "root": { "kind": "split", "gap": 16, "children": [
-        { "kind": "col", "w": 320, "gap": 10, "children": [
-          { "kind": "row", "gap": 8, "children": [ { "kind": "icon", "name": "search", "tone": "muted" }, { "kind": "bar", "w": "72%", "h": 10, "lite": true }, { "kind": "icon", "name": "filter", "tone": "muted" } ] },
+      "root": { "kind": "split", "gap": 18, "children": [
+        { "kind": "col", "w": 300, "gap": 10, "children": [
+          { "kind": "tabs", "items": ["All", "Unread", "Flagged"], "active": 1 },
           { "kind": "listRow", "titleText": "Acme Corp", "subText": "Re: Invoice #4021 is overdue", "active": true },
           { "kind": "listRow", "titleText": "ABC Tyres", "subText": "Payment confirmation attached", "badge": "AI Replied" },
           { "kind": "listRow", "titleText": "Nimbus Ltd", "subText": "Can we extend by two weeks?" },
           { "kind": "listRow", "titleText": "Vertex Co", "subText": "Thanks — all sorted", "badge": "AI Replied" }
         ] },
         { "kind": "col", "gap": 14, "children": [
-          { "kind": "bar", "w": "60%", "h": 15, "text": "Acme Corp · Invoice #4021" },
+          { "kind": "row", "gap": 10, "children": [
+            { "kind": "bar", "w": "50%", "h": 16, "text": "Acme Corp · Invoice #4021", "size": "lg" },
+            { "kind": "button", "label": "Reply", "icon": "mail", "variant": "filled" } ] },
           { "kind": "row", "gap": 8, "children": [
-            { "kind": "dot", "size": 10, "color": "#3b82f6" },
-            { "kind": "dot", "size": 10, "color": "#ef4444" },
-            { "kind": "dot", "size": 10, "color": "#06b6d4" },
-            { "kind": "dot", "size": 10, "color": "#22c55e" },
-            { "kind": "dot", "size": 10, "color": "#ec4899" }
-          ] },
+            { "kind": "chip", "label": "Overdue", "active": true, "color": "#ef4444" },
+            { "kind": "chip", "label": "High value", "active": true, "color": "#3b82f6" },
+            { "kind": "chip", "label": "Enterprise" } ] },
           { "kind": "card", "gap": 10, "children": [
             { "kind": "text", "value": "Summary", "tone": "primary", "weight": "bold" },
             { "kind": "bar", "w": "92%", "h": 8, "lite": true },
@@ -40,7 +40,8 @@
           { "kind": "card", "in": ["loaded"], "gap": 8, "children": [
             { "kind": "text", "value": "Activity created · PTP001", "tone": "primary" },
             { "kind": "text", "value": "Promise to pay by Aug 15", "tone": "muted", "size": "label" }
-          ] }
+          ] },
+          { "kind": "checkbox", "checked": true, "label": "Mark as resolved" }
         ] }
       ] }
     } }

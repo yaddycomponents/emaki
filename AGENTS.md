@@ -55,6 +55,15 @@ live vocabulary. In brief:
   `{ kind:"image", src, w?, h?, fit?, radius? }`. `src` is a local path
   (resolved relative to the deck and inlined at render), a data: URI, or an
   https URL. This is how a mock actually looks like the product.
+- **product primitives**: `button` (variant filled|outline|ghost, icon?),
+  `checkbox`, `chip` (filter/tag), `tabs` (items[], active), `search` field.
+- **chrome**: set scene `chrome` to `window` (title bar) or `app` (top bar +
+  nav rail) and `title` to name it — the mock then sits in a real app frame
+  instead of floating. `none` (default) is a bare mock.
+- **transitions**: state changes `crossfade` by default (skeleton dissolves into
+  text) over `transitionMs`; set `transition:"cut"` for a hard swap.
+- **type sizes** (`text`/`bar` `size`): eyebrow, label, body, md, lg, h2,
+  metric — a small UI ramp (~11–26px), not slide-scale.
 
 ## Text safety
 Prefer plain ASCII punctuation. The default fonts don't cover decorative glyphs

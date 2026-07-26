@@ -16,6 +16,9 @@ const base = {
   in: z.array(z.string()).optional(),
 }
 
+/** The UI type ramp — deliberately small (11–28px), decoupled from the slide scale. */
+export const TextSize = z.enum(['eyebrow', 'label', 'body', 'md', 'lg', 'metric', 'h2'])
+
 // ── leaves ───────────────────────────────────────────────────────────────────
 export const Bar = z.object({
   ...base,
@@ -25,6 +28,8 @@ export const Bar = z.object({
   lite: z.boolean().default(false),
   /** If present, this bar becomes real text once the deck reaches a loaded state. */
   text: z.string().optional(),
+  /** Type size when it becomes text — decoupled from `h` (the shimmer height). */
+  size: TextSize.default('body'),
 })
 
 export const Text = z.object({
@@ -32,7 +37,7 @@ export const Text = z.object({
   kind: z.literal('text'),
   value: z.string().min(1),
   tone: z.enum(['ink', 'muted', 'faint', 'primary', 'good', 'danger']).default('ink'),
-  size: z.enum(['eyebrow', 'label', 'body', 'metric', 'h2']).default('body'),
+  size: TextSize.default('body'),
   mono: z.boolean().default(false),
   weight: z.enum(['regular', 'medium', 'bold']).default('regular'),
 })
@@ -115,6 +120,44 @@ export const Image = z.object({
   alt: z.string().optional(),
 })
 
+// ── product-UI primitives ────────────────────────────────────────────────────
+export const Button = z.object({
+  ...base,
+  kind: z.literal('button'),
+  label: z.string().min(1),
+  variant: z.enum(['filled', 'outline', 'ghost']).default('filled'),
+  color: z.string().optional(),
+  icon: z.enum(ICON_NAMES).optional(),
+})
+
+export const Checkbox = z.object({
+  ...base,
+  kind: z.literal('checkbox'),
+  checked: z.boolean().default(false),
+  label: z.string().optional(),
+})
+
+export const Chip = z.object({
+  ...base,
+  kind: z.literal('chip'),
+  label: z.string().min(1),
+  active: z.boolean().default(false),
+  color: z.string().optional(),
+})
+
+export const Tabs = z.object({
+  ...base,
+  kind: z.literal('tabs'),
+  items: z.array(z.string().min(1)).min(1),
+  active: z.number().int().default(0),
+})
+
+export const Search = z.object({
+  ...base,
+  kind: z.literal('search'),
+  placeholder: z.string().default('Search'),
+})
+
 // composites — the two patterns v1 repeated most
 export const Field = z.object({
   ...base,
@@ -146,6 +189,11 @@ export const Leaf = z.discriminatedUnion('kind', [
   Count,
   Divider,
   Image,
+  Button,
+  Checkbox,
+  Chip,
+  Tabs,
+  Search,
   Field,
   ListRow,
 ])
@@ -162,6 +210,11 @@ export const LEAF_KINDS = [
   'count',
   'divider',
   'image',
+  'button',
+  'checkbox',
+  'chip',
+  'tabs',
+  'search',
   'field',
   'listRow',
 ] as const
@@ -208,7 +261,10 @@ export type State = z.infer<typeof State>
 
 /** The `ui-scene` block's props. Hosted behind one block type in @emaki/blocks. */
 export const uiSceneProps = z.object({
-  chrome: z.enum(['app', 'window', 'none']).default('app'),
+  /** Frame around the mock: `app` (top bar + nav rail), `window` (title bar), or `none`. */
+  chrome: z.enum(['app', 'window', 'none']).default('none'),
+  /** App/window name shown in the chrome title bar. */
+  title: z.string().optional(),
   /** The line under the mock (v1's <Caption>). */
   caption: z.string().optional(),
   /** Timeline of states with holds — skeleton → loaded, etc. */
@@ -216,6 +272,10 @@ export const uiSceneProps = z.object({
     .array(State)
     .min(1)
     .default([{ id: 'loaded', hold: 2.5 }]),
+  /** How state changes read: `crossfade` (dissolve) or `cut` (hard swap). */
+  transition: z.enum(['crossfade', 'cut']).default('crossfade'),
+  /** Crossfade duration at each state boundary, in ms. */
+  transitionMs: z.number().default(420),
   root: Container,
 })
 export type UiSceneProps = z.infer<typeof uiSceneProps>

@@ -62,6 +62,47 @@ const INBOX = {
   },
 }
 
+describe('ui scene — chrome, transitions, product primitives', () => {
+  it('parses chrome + transition scene props with defaults', () => {
+    const bare = uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'text', value: 'x' }] } })
+    expect(bare.chrome).toBe('none')
+    expect(bare.transition).toBe('crossfade')
+    expect(bare.transitionMs).toBe(420)
+    const app = uiSceneProps.parse({ chrome: 'app', title: 'Growfin', transition: 'cut', root: { kind: 'col', children: [{ kind: 'text', value: 'x' }] } })
+    expect(app.chrome).toBe('app')
+    expect(app.title).toBe('Growfin')
+    expect(app.transition).toBe('cut')
+  })
+
+  it('parses the product-UI primitives', () => {
+    const p = uiSceneProps.parse({
+      root: {
+        kind: 'col',
+        children: [
+          { kind: 'button', label: 'Reply', icon: 'mail', variant: 'filled' },
+          { kind: 'checkbox', checked: true, label: 'Done' },
+          { kind: 'chip', label: 'Overdue', active: true, color: '#ef4444' },
+          { kind: 'tabs', items: ['All', 'Unread'], active: 1 },
+          { kind: 'search', placeholder: 'Find' },
+        ],
+      },
+    })
+    expect(p.root.children.map((c) => (c as { kind: string }).kind)).toEqual([
+      'button',
+      'checkbox',
+      'chip',
+      'tabs',
+      'search',
+    ])
+  })
+
+  it('rejects an out-of-allowlist button icon', () => {
+    expect(() =>
+      uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'button', label: 'x', icon: 'not-an-icon' }] } }),
+    ).toThrow()
+  })
+})
+
 describe('ui scene — image leaf (logo/screenshot)', () => {
   it('parses an image node with a local path and defaults', () => {
     const p = uiSceneProps.parse({

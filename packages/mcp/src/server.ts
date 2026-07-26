@@ -118,6 +118,11 @@ const UI_NODE_DOCS: Record<string, string> = {
   count: "number, optionally counted up (to, prefix, suffix)",
   divider: "hairline rule",
   image: "a real logo/screenshot (src: local path, data: URI, or https; w, h, fit, radius)",
+  button: "a button (label, variant: filled|outline|ghost, color?, icon?)",
+  checkbox: "a checkbox (checked, label?)",
+  chip: "a filter/tag chip (label, active, color?)",
+  tabs: "a tab bar (items[], active index)",
+  search: "a search field (placeholder)",
   field: "label + value pair",
   listRow:
     "avatar + title/sub rows + optional badge (title, sub, badge, active)",
@@ -145,6 +150,10 @@ function uiNodeReference(): string {
     `icon names (allowlist): ${ICON_NAMES.join(", ")}.`,
     "dot/badge/icon accept a `color` (hex) that overrides the tone — e.g. coloured status dots.",
     "listRow: `subText` gives a real subtitle (subject/preview/company); `sub` alone is shimmer.",
+    "text/bar `size`: eyebrow, label, body, md, lg, h2, metric (a small UI ramp, ~11–26px).",
+    "",
+    "scene props: `chrome` = app (top bar + nav rail) | window (title bar) | none; `title` names it.",
+    "`transition` = crossfade (skeleton→text dissolves) | cut; `transitionMs` sets the crossfade length.",
   ].join("\n");
 }
 

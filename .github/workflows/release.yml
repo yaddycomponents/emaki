@@ -32,3 +32,16 @@ jobs:
       - run: pnpm -r publish --access public --tag ${{ inputs.tag }} --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # While in beta, keep `latest` pointing at the newest beta too — otherwise
+      # npm leaves `latest` stuck on the first-ever publish and the package page
+      # (and plain `npm i`) show a stale version. Best-effort: never fail release.
+      - name: Point latest at this beta
+        if: ${{ inputs.tag == 'beta' }}
+        continue-on-error: true
+        run: |
+          VER=$(node -p "require('./packages/schema/package.json').version")
+          for p in schema core themes blocks extract render ui mcp cli; do
+            npm dist-tag add @emaki/$p@$VER latest || true
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

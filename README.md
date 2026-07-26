@@ -2,7 +2,7 @@
 
 **Films from a JSON file.** Emaki turns build output — bundle stats, git logs, plain numbers — into short motion-graphic films (the kind you'd post to socials). The film is a `deck.json` on disk; rendering is local; and AI comes in through **MCP** — so Emaki never calls a model or stores a key. Your AI app (Claude Code / Claude Desktop) drives the tools; Emaki just does the work.
 
-> Status: **public beta** (`0.1.0-beta.0`). The engine, CLI, and MCP server are live on npm. The visual Studio is in progress.
+> Status: **public beta** — install any package with the `@beta` tag. The engine, CLI, and MCP server are live on npm. The visual Studio is in progress.
 
 ---
 

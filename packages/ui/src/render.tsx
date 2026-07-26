@@ -1,4 +1,4 @@
-import type { PresetName, Timeline } from "@emaki/core";
+import { buildAnim, type InlineAnim, type PresetName, type Timeline } from "@emaki/core";
 import {
   createElement,
   type ComponentType,
@@ -49,6 +49,7 @@ const PRESET_FOR: Record<LeafNode["kind"], PresetName> = {
   divider: "fadeIn",
   image: "fadeIn",
   sparkle: "popIn",
+  vector: "fadeIn",
   button: "fadeUp",
   checkbox: "fadeUp",
   chip: "popIn",
@@ -67,11 +68,16 @@ export function uiSceneTimeline(props: UiSceneProps): Timeline {
   const { placed, entranceEnd } = sequence(props.root);
   const steps = placed
     .filter((p) => !isContainer(p.node))
-    .map((p) => ({
-      target: p.path,
-      preset: PRESET_FOR[(p.node as LeafNode).kind] ?? "fadeUp",
-      at: p.reveal,
-    }));
+    .map((p) => {
+      const node = p.node as LeafNode & { anim?: string | InlineAnim };
+      // The open animation: an inline spec composes motion; a string names a
+      // preset; otherwise the kind's default. All resolve to one AnimSpec.
+      if (node.anim && typeof node.anim === "object") {
+        return { target: p.path, spec: buildAnim(node.anim), at: p.reveal };
+      }
+      const preset = (typeof node.anim === "string" ? node.anim : PRESET_FOR[node.kind]) as PresetName;
+      return { target: p.path, preset: preset ?? "fadeUp", at: p.reveal };
+    });
   if (props.caption)
     steps.push({
       target: "caption",
@@ -142,10 +148,57 @@ const shimmer = (t: UiTheme, lite: boolean): string =>
 
 const hairline = (t: UiTheme): string => withAlpha(t.colors.text, 0.08);
 
+const SHADOWS: Record<string, string> = {
+  sm: "0 1px 2px rgba(0,0,0,0.06)",
+  md: "0 1px 2px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.08)",
+  lg: "0 1px 2px rgba(0,0,0,0.05), 0 22px 60px rgba(0,0,0,0.12)",
+};
+
+/** Resolve a colour value: a theme token, a hex/rgb, or the AI gradient. */
+function resolveColor(t: UiTheme, v: string): string {
+  switch (v) {
+    case "bg":
+      return t.colors.bg;
+    case "surface":
+      return t.colors.surface;
+    case "text":
+    case "ink":
+      return t.colors.text;
+    case "muted":
+      return t.colors.muted;
+    case "accent":
+    case "primary":
+      return t.colors.accent;
+    case "good":
+      return "#17935f";
+    case "danger":
+      return "#e0484d";
+    case "hairline":
+      return hairline(t);
+    case "ai":
+      return AI_GRADIENT;
+    default:
+      return v;
+  }
+}
+
 // The signature AI look — a pink→blue gradient (ported from v1's AI-Reply deck).
 const AI_GRADIENT = "linear-gradient(64deg, #eb2f96 30%, #1d39c4 70%)";
 const AI_PINK = "#eb2f96";
 const AI_BLUE = "#1d39c4";
+
+function aiGradientDefs(): ReactNode {
+  return createElement(
+    "defs",
+    { key: "d" },
+    createElement(
+      "linearGradient",
+      { id: "emaki-ai-grad", x1: "0", y1: "0", x2: "1", y2: "1" },
+      createElement("stop", { offset: "0%", stopColor: AI_PINK }),
+      createElement("stop", { offset: "100%", stopColor: AI_BLUE }),
+    ),
+  );
+}
 
 /** The AI sparkle mark — a gradient four-point star. Solid `color` overrides the gradient. */
 function renderSparkle(size: number, color?: string): ReactNode {
@@ -153,20 +206,32 @@ function renderSparkle(size: number, color?: string): ReactNode {
   return createElement(
     "svg",
     { width: size, height: size, viewBox: "0 0 24 24", style: { display: "block", flexShrink: 0 } as CSSProperties },
-    color
-      ? null
-      : createElement(
-          "defs",
-          { key: "d" },
-          createElement(
-            "linearGradient",
-            { id: "emaki-ai-grad", x1: "0", y1: "0", x2: "1", y2: "1" },
-            createElement("stop", { offset: "0%", stopColor: AI_PINK }),
-            createElement("stop", { offset: "100%", stopColor: AI_BLUE }),
-          ),
-        ),
+    color ? null : aiGradientDefs(),
     createElement("path", { key: "p1", d: "M12 1.5 L14 9 L21.5 11 L14 13 L12 20.5 L10 13 L2.5 11 L10 9 Z", fill }),
     createElement("path", { key: "p2", d: "M19 3 L19.8 5.6 L22.5 6.5 L19.8 7.4 L19 10 L18.2 7.4 L15.5 6.5 L18.2 5.6 Z", fill, opacity: 0.85 }),
+  );
+}
+
+/** The open vector primitive — a custom mark from SVG path data. `ai` fill uses the gradient. */
+function renderVector(node: Extract<LeafNode, { kind: "vector" }>, t: UiTheme): ReactNode {
+  const usesAi = node.paths.some((p) => p.fill === "ai" || p.stroke === "ai");
+  const col = (v: string | undefined, fallback?: string): string | undefined =>
+    v === undefined ? fallback : v === "ai" ? "url(#emaki-ai-grad)" : resolveColor(t, v);
+  return createElement(
+    "svg",
+    { width: node.w, height: node.h, viewBox: node.viewBox, style: { display: "block", flexShrink: 0 } as CSSProperties },
+    usesAi ? aiGradientDefs() : null,
+    node.paths.map((p, i) =>
+      createElement("path", {
+        key: i,
+        d: p.d,
+        fill: col(p.fill, p.stroke ? "none" : t.colors.text),
+        stroke: col(p.stroke),
+        strokeWidth: p.strokeWidth,
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+      }),
+    ),
   );
 }
 
@@ -447,6 +512,8 @@ function leaf(node: LeafNode, ctx: Ctx): ReactNode {
       return renderIcon(node.name, node.color ?? textColor(t, node.tone));
     case "sparkle":
       return renderSparkle(node.size, node.color);
+    case "vector":
+      return renderVector(node, t);
     case "image":
       return createElement("img", {
         src: node.src,
@@ -653,10 +720,19 @@ const ALIGN: Record<string, CSSProperties["alignItems"]> = {
   stretch: "stretch",
 };
 
-function containerStyle(node: Extract<UiNode, { children: UiNode[]; justify?: string; align?: string }>, t: UiTheme): CSSProperties {
+interface BoxProps {
+  justify?: string;
+  align?: string;
+  bg?: string;
+  border?: boolean | string;
+  radius?: number;
+  shadow?: boolean | "sm" | "md" | "lg";
+}
+
+function containerStyle(node: Extract<UiNode, { children: UiNode[] }> & BoxProps, t: UiTheme): CSSProperties {
   const boxed = node.kind === "card" || node.kind === "panel";
   const row = IS_ROW.has(node.kind);
-  return {
+  const style: CSSProperties = {
     display: "flex",
     flexDirection: row ? "row" : "column",
     gap: node.gap ?? 10,
@@ -671,12 +747,19 @@ function containerStyle(node: Extract<UiNode, { children: UiNode[]; justify?: st
           border: `1px solid ${hairline(t)}`,
           borderRadius: 14,
           padding: node.pad ?? 16,
-          boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.08)",
+          boxShadow: SHADOWS.md,
         }
       : node.pad !== undefined
         ? { padding: node.pad }
         : {}),
   };
+  // The open `box` styling — any container becomes a styled surface. Overrides the boxed defaults.
+  if (node.bg !== undefined) style.background = resolveColor(t, node.bg);
+  if (node.border !== undefined)
+    style.border = node.border === true ? `1px solid ${hairline(t)}` : node.border ? `1px solid ${resolveColor(t, node.border)}` : "none";
+  if (node.radius !== undefined) style.borderRadius = node.radius;
+  if (node.shadow !== undefined) style.boxShadow = node.shadow === false ? "none" : SHADOWS[node.shadow === true ? "md" : node.shadow];
+  return style;
 }
 
 function hasWidth(node: UiNode): boolean {

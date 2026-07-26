@@ -1,5 +1,5 @@
-import { resolvePreset, type Channel } from '../presets'
-import type { TimelineStep } from '../timeline'
+import { type Channel } from '../presets'
+import { stepSpec, type TimelineStep } from '../timeline'
 
 /**
  * Framer Motion props for one step. Framer receives the same bezier control
@@ -25,7 +25,7 @@ function channelToFramer(
 }
 
 export function stepToFramer(step: TimelineStep): FramerProps {
-  const spec = resolvePreset(step.preset, step.params)
+  const spec = stepSpec(step)
   const initial: Record<string, number | string> = {}
   const animate: Record<string, number | string> = {}
 

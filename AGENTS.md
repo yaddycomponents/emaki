@@ -57,6 +57,21 @@ live vocabulary. In brief:
   https URL. This is how a mock actually looks like the product.
 - **product primitives**: `button` (variant filled|outline|ghost, icon?),
   `checkbox`, `chip` (filter/tag), `tabs` (items[], active), `search` field.
+- **the AI look**: `sparkle` (the animated pink→blue AI star), `text`/`dot`
+  `gradient:"ai"` (gradient text / gradient avatar), and `badge` `tone:"ai"`
+  (a sparkle + gradient pill). Use these for "AI replied / AI drafted" moments.
+
+## The open layer — compose, don't wait for new primitives
+When the semantic nodes don't cover a look, drop down a level instead of asking
+for a new block. It's all still data — deterministic, themeable, validated.
+- **Any entrance motion** via a node's `anim`: name a preset (`"popIn"`) OR
+  compose inline — `anim: { from: { x:-60, opacity:0 }, dur:0.6, ease:"back" }`.
+  So "slide in from the left" needs no new preset.
+- **Any container is a box**: give it `bg`, `border`, `radius`, `shadow`.
+  Colours take a theme token (`accent`, `surface`, …), a hex, or `"ai"`.
+- **Any custom mark**: the `vector` leaf draws from SVG path data —
+  `{ kind:"vector", paths:[{ d:"M12 2 …", fill:"ai" }], w, h }`. This is how the
+  built-in icons and the sparkle are drawn; you can draw anything the same way.
 - **chrome**: set scene `chrome` to `window` (title bar) or `app` (top bar +
   nav rail) and `title` to name it — the mock then sits in a real app frame
   instead of floating. `none` (default) is a bare mock.

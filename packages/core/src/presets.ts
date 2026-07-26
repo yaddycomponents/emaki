@@ -109,3 +109,43 @@ export type PresetName = keyof typeof PRESETS
 export function resolvePreset(name: PresetName, params?: PresetParams): AnimSpec {
   return PRESETS[name](params)
 }
+
+/** Named eases an author can reference inline, plus the raw bezier escape hatch. */
+export const NAMED_EASE = {
+  out: EASE_OUT,
+  inOut: EASE_INOUT,
+  soft: EASE_SOFT,
+  back: EASE_BACK,
+  in: [0.42, 0, 1, 1] as BezierPoints,
+  linear: [0, 0, 1, 1] as BezierPoints,
+} satisfies Record<string, BezierPoints>
+
+export type EaseName = keyof typeof NAMED_EASE
+
+/**
+ * The open animation primitive: an author (or the AI) composes motion as data —
+ * starting offsets that animate to the element's natural state — instead of
+ * picking from a fixed preset list. Resolved to the SAME `AnimSpec` the presets
+ * produce, so it flows through the identical deterministic adapters.
+ */
+export interface InlineAnim {
+  /** Where the element starts; it animates to identity (opacity→1, x/y→0, scale→1, rotate→0). */
+  from?: { opacity?: number; x?: number; y?: number; scale?: number; rotate?: number }
+  /** Duration in seconds. */
+  dur?: number
+  /** A named ease, or raw cubic-bezier control points. */
+  ease?: EaseName | BezierPoints
+}
+
+const IDENTITY: Record<string, number> = { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }
+
+export function buildAnim(a: InlineAnim): AnimSpec {
+  const from = a.from ?? { opacity: 0, y: 12 }
+  const channels: Channels = {}
+  for (const [k, v] of Object.entries(from)) {
+    if (v === undefined) continue
+    channels[k as Channel] = { from: v, to: IDENTITY[k] ?? 0 }
+  }
+  const ease = Array.isArray(a.ease) ? (a.ease as BezierPoints) : NAMED_EASE[(a.ease as EaseName) ?? 'out']
+  return { channels, ease, duration: a.dur ?? DUR.base }
+}

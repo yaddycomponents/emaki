@@ -9,11 +9,49 @@ import * as z from 'zod'
 
 export const Size = z.union([z.number(), z.string()]).meta({ description: '380 | "52%" | "1fr"' })
 
+/** Named entrance presets an author can name directly. Inline motion is the open form. */
+export const ANIM_PRESETS = [
+  'fadeUp',
+  'fadeIn',
+  'popIn',
+  'maskReveal',
+  'spinIn',
+  'growX',
+  'growY',
+  'growXFade',
+  'sceneSwap',
+] as const
+
+/**
+ * The open animation primitive. An author (or the AI) either names a preset, or
+ * composes motion as data: starting offsets that ease to the natural state. This
+ * is what lets the vocabulary grow without a new engine release per motion.
+ */
+export const InlineAnim = z.object({
+  from: z
+    .object({
+      opacity: z.number().optional(),
+      x: z.number().optional(),
+      y: z.number().optional(),
+      scale: z.number().optional(),
+      rotate: z.number().optional(),
+    })
+    .optional(),
+  dur: z.number().optional(),
+  ease: z
+    .union([z.enum(['out', 'in', 'inOut', 'soft', 'back', 'linear']), z.array(z.number()).length(4)])
+    .optional(),
+})
+
+export const Anim = z.union([z.enum(ANIM_PRESETS), InlineAnim])
+
 const base = {
   /** Optional nudge on the derived reveal time, in seconds. */
   at: z.number().optional(),
   /** Render only in these states (omit = all). e.g. an "Activity created" card that only exists once loaded. */
   in: z.array(z.string()).optional(),
+  /** Entrance motion — a preset name or inline `{from,dur,ease}`. Overrides the default. */
+  anim: Anim.optional(),
 }
 
 /** The UI type ramp — deliberately small (11–28px), decoupled from the slide scale. */
@@ -132,6 +170,26 @@ export const Image = z.object({
   alt: z.string().optional(),
 })
 
+/** The open vector primitive — a custom mark drawn as SVG path data (safe, no code). */
+export const Vector = z.object({
+  ...base,
+  kind: z.literal('vector'),
+  paths: z
+    .array(
+      z.object({
+        d: z.string().min(1),
+        /** Fill colour — a theme token (accent/ink/muted/…), a hex, or "ai" for the gradient. */
+        fill: z.string().optional(),
+        stroke: z.string().optional(),
+        strokeWidth: z.number().optional(),
+      }),
+    )
+    .min(1),
+  viewBox: z.string().default('0 0 24 24'),
+  w: z.number().default(24),
+  h: z.number().default(24),
+})
+
 // ── product-UI primitives ────────────────────────────────────────────────────
 export const Button = z.object({
   ...base,
@@ -202,6 +260,7 @@ export const Leaf = z.discriminatedUnion('kind', [
   Divider,
   Image,
   Sparkle,
+  Vector,
   Button,
   Checkbox,
   Chip,
@@ -224,6 +283,7 @@ export const LEAF_KINDS = [
   'divider',
   'image',
   'sparkle',
+  'vector',
   'button',
   'checkbox',
   'chip',
@@ -252,6 +312,14 @@ export interface ContainerNode {
   justify?: 'start' | 'center' | 'end' | 'between'
   /** Cross-axis alignment. Default: row `center`, col `stretch`. */
   align?: 'start' | 'center' | 'end' | 'stretch'
+  /** Background — a theme token (surface/accent/…), a hex, or "ai" for the gradient. */
+  bg?: string
+  /** Border — true for a hairline, or a token/hex colour. */
+  border?: boolean | string
+  /** Corner radius, px. */
+  radius?: number
+  /** Drop shadow — true/`md`, or `sm`/`lg`. */
+  shadow?: boolean | 'sm' | 'md' | 'lg'
   /** Stagger between this container's children, in seconds. */
   stagger?: number
   children: UiNode[]
@@ -270,6 +338,10 @@ export const Container: z.ZodType<ContainerNode> = z.lazy(() =>
       pad: z.number().optional(),
       justify: Justify.optional(),
       align: Align.optional(),
+      bg: z.string().optional(),
+      border: z.union([z.boolean(), z.string()]).optional(),
+      radius: z.number().optional(),
+      shadow: z.union([z.boolean(), z.enum(['sm', 'md', 'lg'])]).optional(),
       stagger: z.number().optional(),
       children: z.array(UiNode).min(1),
     })

@@ -136,6 +136,35 @@ describe('ui scene — chrome, transitions, product primitives', () => {
     expect((p.root.children[1] as { gradient?: string }).gradient).toBe('ai')
   })
 
+  it('parses the open layer — inline anim, box props, vector', () => {
+    const p = uiSceneProps.parse({
+      root: {
+        kind: 'col',
+        bg: 'surface',
+        border: true,
+        radius: 16,
+        shadow: 'lg',
+        children: [
+          { kind: 'text', value: 'slide', anim: { from: { x: -60, opacity: 0 }, dur: 0.6, ease: 'back' } },
+          { kind: 'text', value: 'preset', anim: 'popIn' },
+          { kind: 'vector', w: 30, h: 30, paths: [{ d: 'M13 2 L4 14 L11 14 Z', fill: 'ai' }] },
+        ],
+      },
+    })
+    const root = p.root as { bg?: string; shadow?: string; children: { kind: string; anim?: unknown }[] }
+    expect(root.bg).toBe('surface')
+    expect(root.shadow).toBe('lg')
+    expect(typeof root.children[0].anim).toBe('object')
+    expect(root.children[1].anim).toBe('popIn')
+    expect(root.children[2].kind).toBe('vector')
+  })
+
+  it('rejects a bad inline ease', () => {
+    expect(() =>
+      uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'text', value: 'x', anim: { ease: 'wobble' } }] } }),
+    ).toThrow()
+  })
+
   it('rejects an out-of-allowlist button icon', () => {
     expect(() =>
       uiSceneProps.parse({ root: { kind: 'col', children: [{ kind: 'button', label: 'x', icon: 'not-an-icon' }] } }),

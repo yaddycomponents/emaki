@@ -1,13 +1,17 @@
-import { resolvePreset, type PresetName, type PresetParams } from './presets'
+import { type AnimSpec, resolvePreset, type PresetName, type PresetParams } from './presets'
 
 /**
- * A timeline step animates one named target with one preset, starting at `at`
- * seconds. A block declares a single `Timeline`; both render paths read it.
+ * A timeline step animates one named target, starting at `at` seconds. The
+ * motion is either a named `preset` or an inline `spec` (the open animation
+ * primitive) — both resolve to the same `AnimSpec`, so both render paths read it
+ * identically.
  */
 export interface TimelineStep {
   /** id of the element in the block layout this step drives. */
   target: string
-  preset: PresetName
+  preset?: PresetName
+  /** An inline, pre-resolved animation — takes precedence over `preset`. */
+  spec?: AnimSpec
   /** delay before this step starts, in seconds. */
   at?: number
   params?: PresetParams
@@ -15,9 +19,14 @@ export interface TimelineStep {
 
 export type Timeline = readonly TimelineStep[]
 
+/** The resolved animation for a step — inline spec wins, else the named preset. */
+export function stepSpec(step: TimelineStep): AnimSpec {
+  return step.spec ?? resolvePreset(step.preset ?? 'fadeIn', step.params)
+}
+
 /** When a single step finishes, in seconds. */
 export function stepEnd(step: TimelineStep): number {
-  return (step.at ?? 0) + resolvePreset(step.preset, step.params).duration
+  return (step.at ?? 0) + stepSpec(step).duration
 }
 
 /**

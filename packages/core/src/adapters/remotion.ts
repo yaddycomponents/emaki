@@ -1,7 +1,7 @@
 import { cubicBezier, clamp, lerp } from '../easing'
-import { resolvePreset, type Channel } from '../presets'
+import { type Channel } from '../presets'
 import { composeStyle, type ChannelValues, type RenderStyle } from '../compose'
-import type { TimelineStep, Timeline } from '../timeline'
+import { stepSpec, type TimelineStep, type Timeline } from '../timeline'
 
 export interface FrameCtx {
   frame: number
@@ -10,7 +10,7 @@ export interface FrameCtx {
 
 /** The animated style for one step at a given frame — deterministic, no clock. */
 export function stepStyleAt(step: TimelineStep, ctx: FrameCtx): RenderStyle {
-  const spec = resolvePreset(step.preset, step.params)
+  const spec = stepSpec(step)
   const t = ctx.frame / ctx.fps
   const local = spec.duration <= 0 ? 1 : clamp((t - (step.at ?? 0)) / spec.duration, 0, 1)
   const eased = cubicBezier(spec.ease)(local)

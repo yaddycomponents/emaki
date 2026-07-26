@@ -21,6 +21,7 @@ import {
   Tabs,
   Text,
   Toggle,
+  Vector,
 } from './schema'
 
 /**
@@ -42,6 +43,7 @@ const LEAF_BY_KIND: Record<string, z.ZodType> = {
   divider: Divider,
   image: Image,
   sparkle: Sparkle,
+  vector: Vector,
   button: Button,
   checkbox: Checkbox,
   chip: Chip,
@@ -61,6 +63,10 @@ const ContainerScalar = z.object({
   pad: z.number().optional(),
   justify: Justify.optional(),
   align: Align.optional(),
+  bg: z.string().optional(),
+  border: z.union([z.boolean(), z.string()]).optional(),
+  radius: z.number().optional(),
+  shadow: z.union([z.boolean(), z.enum(['sm', 'md', 'lg'])]).optional(),
   stagger: z.number().optional(),
 })
 
